@@ -7,8 +7,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(add_help=False,
                                      usage='\n       '
-                                           .join('{0} [-d] {1}'
-                                                 .format(sys.argv[0], opts)
+                                           .join('%(prog)s [-d] {0}'
+                                                 .format(opts)
                                                  for opts in
                                                  ['[-i DICTCC_FILE]',
                                                   '[-v] [-S] [-h]',
