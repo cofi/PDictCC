@@ -1,7 +1,60 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import anydbm
+import os.path
 
 __version__ = ('0', '1')
+
+
+class DB(object):
+    databases = [('a', 'A => B'), ('b', 'B => A')]
+    DICT_DIR = os.path.expanduser('~/.rdictcc')
+    FILE_SCHEME = 'dict_{0}.dir'
+    LANG_DIR_KEY = '__dictcc_lang_dir'
+    def __init__(self, lang):
+        self.path = os.path.join(DB.DICT_DIR, DB.FILE_SCHEME.format(lang))
+        self.db = None
+
+    def __enter__(self):
+        if not os.path.exists(self.path):
+            print('Path "{0}" does not exist, will create it.'.format(self.path))
+        self.db = anydbm.open(self.path, 'c')
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.db.close()
+        self.db = None
+
+    def __iter__(self):
+        if self.db is None:
+            raise StopIteration()
+        key = self.db.firstkey()
+        while key is not None:
+            yield key, self.db[key]
+            key = self.db.nextkey(key)
+
+    def get(self, key, default=False):
+        try:
+            return self.db[key]
+        except KeyError:
+            if default is False:
+                raise
+            else:
+                return default
+
+    def size(self):
+        if self.db is not None:
+            return sum(1 for _ in self)
+        else:
+            with self:
+                return sum(1 for _ in self)
+
+    def header(self):
+        if self.db is not None:
+            return self.get(DB.LANG_DIR_KEY, None)
+        else:
+            with self:
+                return self.get(DB.LANG_DIR_KEY, None)
 
 if __name__ == '__main__':
     import sys
