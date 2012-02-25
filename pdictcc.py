@@ -6,17 +6,28 @@ import anydbm
 import os.path
 import re
 import sys
+from textwrap import dedent
 
 __version__ = ('0', '1')
 
+class DBException(Exception):
+    pass
 
 class DB(object):
     databases = [('a', 'A => B'), ('b', 'B => A')]
     DICT_DIR = os.path.expanduser('~/.rdictcc')
     FILE_SCHEME = 'dict_{0}.dir'
     LANG_DIR_KEY = '__dictcc_lang_dir'
-    def __init__(self, lang):
+    def __init__(self, lang, importing=False):
         self.path = os.path.join(DB.DICT_DIR, DB.FILE_SCHEME.format(lang))
+        if not importing and not os.path.exists(DB.DICT_DIR):
+            raise DBException(dedent(
+                """\
+                There's no "{0}" directory!
+                You have to import an dict.cc database file first.
+                See --help for information.
+                """.format(DB.DICT_DIR)))
+
         self.db = None
         self._accessors = 0
 
@@ -137,6 +148,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    if args.directory:
+        DB.DICT_DIR = args.directory
     try:
         if args.size:
             for lang, lang_desc in DB.databases:
@@ -148,8 +161,6 @@ if __name__ == '__main__':
             for q in args.query:
                 if args.regexp:
                     q = ':r:' + q
-    if args.directory:
-        DB.DICT_DIR = args.directory
                 elif args.fulltext:
                     q = ':f:' + q
                 print(execute_query(q, args.compact))
