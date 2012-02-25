@@ -67,7 +67,7 @@ def execute_query(query, compact=False):
     for lang, dir_default in DB.databases:
         with DB(lang) as db:
             result.append(header_fmt.format(db.header() or dir_default))
-            result.append(format_entry(qfun(query, db)))
+            result.append(format_entry(qfun(query, db), compact))
     return '\n'.join(result)
 
 def format_entry(entry, compact=False):
