@@ -7,6 +7,7 @@ import os.path
 import re
 import sys
 from textwrap import dedent
+from itertools import chain
 
 __version__ = ('0', '1')
 
@@ -83,7 +84,22 @@ def execute_query(query, compact=False):
     return '\n'.join(result)
 
 def format_entry(entry, compact=False):
-    return ' \n'.join(entry)
+    if compact:
+        fmt = '- {0}: {1}'
+        joint = ' / '
+    else:
+        fmt ='{0}:\n    - {1}'
+        joint = '\n    - '
+    parts = list(chain.from_iterable(e.strip().split('#<>#') for e in entry))
+    res = []
+    for p in parts:
+        if not p:
+            continue
+        e = p.split('=<>')
+        head, tails = e[0], (t.split(':<>:') for t in e[1:])
+        res.append(fmt.format(head, joint.join(chain.from_iterable(tails))))
+
+    return '\n'.join(res)
 
 def query_simple(query, db):
     return [db.get(query, '')]
