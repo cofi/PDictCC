@@ -64,12 +64,12 @@ class DB(object):
             yield key, self.db[key]
             key = self.db.nextkey(key)
 
-    def get(self, key, default=False):
-        try:
-            return self.db[key].decode('utf-8')
     def __setitem__(self, key, value):
         self.db[key.encode('utf-8')] = value.encode('utf-8')
 
+    def get(self, key, default=False):
+        try:
+            return self.db[key].decode('utf-8')
         except KeyError:
             if default is False:
                 raise
@@ -198,8 +198,8 @@ if __name__ == '__main__':
                                                   '[-c] [-s | -r | -f] QUERY']))
 
     db = parser.add_argument_group('Database building options')
-    db.add_argument('-i', '--import', metavar='DICTCC_FILE',
-                    help='Import the dict file from dict.cc')
+    db.add_argument('-i', '--import', metavar='DICTCC_FILE', dest='imp',
+                    help='Import dict files from dict.cc')
 
     formatting = parser.add_argument_group('Format options')
     formatting.add_argument('-c', '--compact', action='store_true',
@@ -236,6 +236,11 @@ if __name__ == '__main__':
                 with DB(lang) as db:
                     print('{0}: {1} entries'.format(db.header() or lang_desc,
                                                     db.size()))
+        elif args.imp:
+            path = args.imp
+            print('Importing from "{0}"'.format(path))
+            counts = import_dictionary(path)
+            print('Imported {0} (A => B) and {1} (B => A) entries'.format(*counts))
 
         elif args.query:
             for q in args.query:
