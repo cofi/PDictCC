@@ -17,16 +17,21 @@ class DB(object):
     def __init__(self, lang):
         self.path = os.path.join(DB.DICT_DIR, DB.FILE_SCHEME.format(lang))
         self.db = None
+        self._accessors = 0
 
     def __enter__(self):
         if not os.path.exists(self.path):
             print('Path "{0}" does not exist, will create it.'.format(self.path))
-        self.db = anydbm.open(self.path, 'c')
+        if self._accessors == 0:
+            self.db = anydbm.open(self.path, 'c')
+        self._accessors += 1
         return self
 
     def __exit__(self, type, value, traceback):
-        self.db.close()
-        self.db = None
+        self._accessors -= 1
+        if self._accessors == 0:
+            self.db.close()
+            self.db = None
 
     def __iter__(self):
         if self.db is None:
@@ -46,18 +51,12 @@ class DB(object):
                 return default
 
     def size(self):
-        if self.db is not None:
+        with self:
             return sum(1 for _ in self)
-        else:
-            with self:
-                return sum(1 for _ in self)
 
     def header(self):
-        if self.db is not None:
+        with self:
             return self.get(DB.LANG_DIR_KEY, None)
-        else:
-            with self:
-                return self.get(DB.LANG_DIR_KEY, None)
 
 def execute_query(query, compact=False):
     qfun = {':r:' : query_regexp,
