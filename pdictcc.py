@@ -144,6 +144,10 @@ if __name__ == '__main__':
 
     elif args.query:
         for q in args.query:
+            if args.regexp:
+                q = ':r:' + q
+            elif args.fulltext:
+                q = ':f:' + q
             print(execute_query(q, args.compact))
 
     else:
