@@ -18,6 +18,10 @@
 # this program ; see the file COPYING.  If not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+# PDictCC is a tool for offline dictionary lookup based on dict.cc databases
+# that tries to be a compatible replacement of Tassilo Horn's RDictCC:
+# http://www.tsdh.de/cgi-bin/wiki.pl/RDictCc
+
 from __future__ import print_function, unicode_literals
 
 import anydbm
