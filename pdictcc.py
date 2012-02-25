@@ -106,6 +106,9 @@ class DB(object):
         with self:
             return self.get(DB.LANG_DIR_KEY, None)
 
+    def __getitem__(self, key):
+        return self.get(key)
+
 def execute_query(query, compact=False):
     qfun = {':r:' : query_regexp,
             ':f:' : query_fulltext}.get(query[:3], query_simple)
