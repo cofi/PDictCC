@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import anydbm
 import os.path
+import re
 
 __version__ = ('0', '1')
 
@@ -55,6 +56,40 @@ class DB(object):
         else:
             with self:
                 return self.get(DB.LANG_DIR_KEY, None)
+
+def execute_query(query, compact=False):
+    qfun = {':r:' : query_regexp,
+            ':f:' : query_fulltext}.get(query[:3], query_simple)
+    query = query.lower() if query[:3] not in [':r:', ':f:'] else query[3:].lower()
+    header_fmt = 15 * '=' + ' [ {0} ] ' + 15 * '='
+    result = []
+    for lang, dir_default in DB.databases:
+        with DB(lang) as db:
+            result.append(header_fmt.format(db.header() or dir_default))
+            result.append(format_entry(qfun(query.lower(), db)))
+    return '\n'.join(result)
+
+def format_entry(entry, compact=False):
+    return ' \n'.join(entry)
+
+def query_simple(query, db):
+    return [db.get(query, '')]
+
+def query_regexp(query, db):
+    rx = re.compile(query)
+    return [v for k, v in db if rx.match(k)]
+
+def query_fulltext(query, db):
+    pass
+
+def interactive_mode():
+    try:
+        while True:
+            query = raw_input('=> ').strip()
+            print(execute_query(query))
+
+    except EOFError:
+        pass
 
 if __name__ == '__main__':
     import sys
