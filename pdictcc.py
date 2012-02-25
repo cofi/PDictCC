@@ -148,6 +148,8 @@ if __name__ == '__main__':
             for q in args.query:
                 if args.regexp:
                     q = ':r:' + q
+    if args.directory:
+        DB.DICT_DIR = args.directory
                 elif args.fulltext:
                     q = ':f:' + q
                 print(execute_query(q, args.compact))
