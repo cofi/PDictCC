@@ -175,7 +175,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.directory:
-        DB.DICT_DIR = args.directory
+        DB.DICT_DIR = os.path.expanduser(args.directory)
     try:
         if args.size:
             for lang, lang_desc in DB.databases:
