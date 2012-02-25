@@ -21,13 +21,20 @@ class DB(object):
     LANG_DIR_KEY = '__dictcc_lang_dir'
     def __init__(self, lang, importing=False):
         self.path = os.path.join(DB.DICT_DIR, DB.FILE_SCHEME.format(lang))
-        if not importing and not os.path.exists(DB.DICT_DIR):
-            raise DBException(dedent(
-                """\
-                There's no "{0}" directory!
-                You have to import an dict.cc database file first.
-                See --help for information.
-                """.format(DB.DICT_DIR)))
+        self._open_flags = 'n' if importing else 'c'
+        if not os.path.exists(DB.DICT_DIR):
+            if not importing:
+                raise DBException(dedent(
+                    """\
+                    There's no "{0}" directory!
+                    You have to import an dict.cc database file first.
+                    See --help for information.
+                    """.format(DB.DICT_DIR)))
+            else:
+                os.mkdir(DB.DICT_DIR)
+        else:
+            if os.path.exists(self.path) and importing:
+                print('Will overwrite "{0}"'.format(self.path))
 
         self.db = None
         self._accessors = 0
@@ -36,7 +43,7 @@ class DB(object):
         if not os.path.exists(self.path):
             print('Path "{0}" does not exist, will create it.'.format(self.path))
         if self._accessors == 0:
-            self.db = anydbm.open(self.path, 'c')
+            self.db = anydbm.open(self.path, self._open_flags)
         self._accessors += 1
         return self
 
