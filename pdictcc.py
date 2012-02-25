@@ -64,6 +64,9 @@ class DB(object):
     def get(self, key, default=False):
         try:
             return self.db[key].decode('utf-8')
+    def __setitem__(self, key, value):
+        self.db[key.encode('utf-8')] = value.encode('utf-8')
+
         except KeyError:
             if default is False:
                 raise
