@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 import anydbm
 import os.path
@@ -56,7 +56,7 @@ class DB(object):
 
     def get(self, key, default=False):
         try:
-            return self.db[key]
+            return self.db[key].decode('utf-8')
         except KeyError:
             if default is False:
                 raise
