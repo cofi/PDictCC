@@ -137,19 +137,24 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if args.size:
-        for lang, lang_desc in DB.databases:
-            with DB(lang) as db:
-                print('{0}: {1} entries'.format(db.header() or lang_desc,
-                                                db.size()))
+    try:
+        if args.size:
+            for lang, lang_desc in DB.databases:
+                with DB(lang) as db:
+                    print('{0}: {1} entries'.format(db.header() or lang_desc,
+                                                    db.size()))
 
-    elif args.query:
-        for q in args.query:
-            if args.regexp:
-                q = ':r:' + q
-            elif args.fulltext:
-                q = ':f:' + q
-            print(execute_query(q, args.compact))
+        elif args.query:
+            for q in args.query:
+                if args.regexp:
+                    q = ':r:' + q
+                elif args.fulltext:
+                    q = ':f:' + q
+                print(execute_query(q, args.compact))
 
-    else:
-        interactive_mode()
+        else:
+            interactive_mode()
+
+    except Exception as e:
+            print(e)
+            sys.exit(1)
