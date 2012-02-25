@@ -5,6 +5,7 @@ from __future__ import print_function
 import anydbm
 import os.path
 import re
+import sys
 
 __version__ = ('0', '1')
 
@@ -94,7 +95,6 @@ def interactive_mode():
         pass
 
 if __name__ == '__main__':
-    import sys
     import argparse
 
     parser = argparse.ArgumentParser(add_help=False,
