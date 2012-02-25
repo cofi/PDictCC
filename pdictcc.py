@@ -134,3 +134,16 @@ if __name__ == '__main__':
                         help='the query to search')
 
     args = parser.parse_args()
+
+    if args.size:
+        for lang, lang_desc in DB.databases:
+            with DB(lang) as db:
+                print('{0}: {1} entries'.format(db.header() or lang_desc,
+                                                db.size()))
+
+    elif args.query:
+        for q in args.query:
+            execute_query(q, args.compact)
+
+    else:
+        interactive_mode()
