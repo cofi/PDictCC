@@ -42,7 +42,7 @@ class DBException(Exception):
 class DB(object):
     databases = [('a', 'A => B'), ('b', 'B => A')]
     DICT_DIR = os.path.expanduser('~/.rdictcc')
-    FILE_SCHEME = 'dict_{0}.dir'
+    FILE_SCHEME = 'dict_{0}.dbm'
     LANG_DIR_KEY = '__dictcc_lang_dir'
     def __init__(self, lang, importing=False):
         self.path = os.path.join(DB.DICT_DIR, DB.FILE_SCHEME.format(lang))
