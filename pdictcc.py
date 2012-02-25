@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
+
 import anydbm
 import os.path
 import re
@@ -143,7 +145,7 @@ if __name__ == '__main__':
 
     elif args.query:
         for q in args.query:
-            execute_query(q, args.compact)
+            print(execute_query(q, args.compact))
 
     else:
         interactive_mode()
