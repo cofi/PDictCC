@@ -3,11 +3,14 @@
 from __future__ import print_function, unicode_literals
 
 import anydbm
-import os.path
+import codecs
+import os
 import re
 import sys
-from textwrap import dedent
 from itertools import chain
+from textwrap import dedent
+from collections import defaultdict
+
 
 __version__ = ('0', '1')
 
@@ -130,6 +133,57 @@ def interactive_mode():
 
     except EOFError:
         pass
+
+class Entry(object):
+    def __init__(self):
+        self.dictionary = defaultdict(list)
+
+    def add(self, phrase, translation):
+        self.dictionary[phrase.strip()].append(translation.strip())
+
+    def format(self):
+        parts = []
+        for phrase, translations in self.dictionary.iteritems():
+            parts.append('{0}=<>{1}'.format(phrase, ':<>:'.join(translations)))
+        return "#<>#".join(parts)
+
+def import_dictionary(path):
+    a = defaultdict(Entry)
+    b = defaultdict(Entry)
+    with codecs.open(path, encoding='utf-8') as f:
+        head = re.match('# ([A-Z]{2})-([A-Z]{2}) vocabulary database', next(f))
+        if not head:
+            raise ValueError('"{0}" is not a dict.cc database'.format(path))
+        a[DB.LANG_DIR_KEY] = ' => '.join(head.groups())
+        b[DB.LANG_DIR_KEY] = ' => '.join(reversed(head.groups()))
+
+        for line in f:
+            if line.startswith('#') or not line.strip():
+                continue
+            phrase, translation, word_type = line.split('\t')
+            for d in [a, b]:
+                key = extract_key(phrase)
+                if key:
+                    d[key].add(phrase, translation)
+                phrase, translation = translation.split('\t')[0], phrase
+
+        for d, db_name in [(a, 'a'), (b, 'b')]:
+            with DB(db_name, True) as db:
+                for key, value in d.iteritems():
+                    if key == DB.LANG_DIR_KEY:
+                        db[key] = value
+                    else:
+                        db[key] = value.format()
+        return len(a), len(b)
+
+def extract_key(phrase):
+    key = re.sub(r'(\([^(]*\)|\{[^{]*\}|\[[^\[]*\])', '', phrase.lower())
+    if key:
+        keys = [key.strip() for key in re.sub(r'[.,<>]', ' ', key).strip().split()]
+        if keys:
+            longest_key = sorted(keys, key=len)[-1]
+            return longest_key
+    return ''
 
 if __name__ == '__main__':
     import argparse
