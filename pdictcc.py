@@ -158,5 +158,5 @@ if __name__ == '__main__':
             interactive_mode()
 
     except Exception as e:
-            print(e)
-            sys.exit(1)
+        print(e)
+        sys.exit(1)
