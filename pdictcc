@@ -25,6 +25,7 @@ from __future__ import print_function, unicode_literals
 
 import codecs
 import gdbm
+import json
 import os
 import re
 import sys
@@ -365,7 +366,6 @@ def interactive_mode():
         print('Bye.')
 
 
-if __name__ == '__main__':
 def format_query_result(result, compact=False):
     """
     Format the result of a query.
@@ -383,6 +383,19 @@ def format_query_result(result, compact=False):
                      for head, entries in result)
 
 
+def dump_query_results(query_results):
+    """
+    :param result: list of header, entries pairs for entries matching query
+    :type result: list
+    """
+    return json.dumps([{'query': query,
+                        'result': [{'direction': head,
+                                    'entries': [e.dictionary for e in entries]}
+                                   for head, entries in r]
+                    } for query, r in query_results])
+
+
+if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -392,8 +405,8 @@ def format_query_result(result, compact=False):
                                                  for opts in
                                                  ['[-i DICTCC_FILE]',
                                                   '[-v] [-S] [-h]',
-                                                  '[-c] [-s | -r | -f] QUERY'
-                                                  ' [QUERY ...]',
+                                                  '[-c | -j] [-s | -r | -f] '
+                                                  'QUERY [QUERY ...]',
                                                   '(interacttive mode)']))
 
     imp = parser.add_argument_group('Database building options')
@@ -401,8 +414,11 @@ def format_query_result(result, compact=False):
                      help='Import dict files from dict.cc')
 
     formatting = parser.add_argument_group('Format options')
-    formatting.add_argument('-c', '--compact', action='store_true',
-                            help='Use compact output format')
+    format_mutex = formatting.add_mutually_exclusive_group()
+    format_mutex.add_argument('-c', '--compact', action='store_true',
+                              help='Use compact output format')
+    format_mutex.add_argument('-j', '--json', action='store_true',
+                              help='JSON output format')
 
     misc = parser.add_argument_group('Misc options')
     misc.add_argument('-v', '--version', action='version', help='Show version',
@@ -443,13 +459,17 @@ def format_query_result(result, compact=False):
 
         elif args.query:
             queries = (q.decode(sys.stdin.encoding or 'utf-8') for q in args.query)
-            for q in queries:
-                if args.regexp:
-                    q = ':r:' + q
-                elif args.fulltext:
-                    q = ':f:' + q
-                print(format_query_result(execute_query(q), args.compact)
+            if args.json:
+                print(dump_query_results((q, execute_query(q)) for q in queries)
                       .encode(sys.stdin.encoding or 'utf-8'))
+            else:
+                for q in queries:
+                    if args.regexp:
+                        q = ':r:' + q
+                    elif args.fulltext:
+                        q = ':f:' + q
+                    print(format_query_result(execute_query(q), args.compact)
+                          .encode(sys.stdin.encoding or 'utf-8'))
 
         else:
             interactive_mode()
