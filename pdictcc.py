@@ -164,8 +164,12 @@ def execute_query(query, compact=False):
         with DB(lang) as db:
             result.append(header_fmt.format(db.header() or dir_default))
             query_result = [entry.format(compact) for entry in qfun(query, db)]
-            result.extend(query_result)
-    return '\n'.join(result)
+            # remove header if there are no results or only empty in this direction
+            if query_result and not all(not q for q in query_result):
+                result.extend(query_result)
+            else:
+                result.pop()
+    return '\n'.join(result) if result else 'No results.'
 
 def query_simple(query, db):
     """
