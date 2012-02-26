@@ -364,7 +364,8 @@ def interactive_mode():
             print(execute_query(query))
 
     except EOFError:
-        pass
+        print()
+        print('Bye.')
 
 
 if __name__ == '__main__':
