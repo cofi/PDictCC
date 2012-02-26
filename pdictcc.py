@@ -149,7 +149,7 @@ class DB(object):
 
 class Entry(object):
     """
-    An entry is the collaction of all phrases and corresponding translations
+    An entry is the collection of all phrases and corresponding translations
     that share a key.
     """
     def __init__(self):
