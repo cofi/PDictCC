@@ -100,7 +100,7 @@ class DB(object):
             raise StopIteration()
         key = self.db.firstkey()
         while key is not None:
-            yield key, self.db[key]
+            yield key.decode(ENCODING), self.db[key].decode(ENCODING)
             key = self.db.nextkey(key)
 
     def __setitem__(self, key, value):
@@ -224,7 +224,7 @@ def interactive_mode():
           'Enter C-d (Ctrl + d) to exit.')
     try:
         while True:
-            query = raw_input('=> ').strip()
+            query = raw_input('=> ').strip().decode(sys.stdin.encoding)
             print(execute_query(query))
 
     except EOFError:
