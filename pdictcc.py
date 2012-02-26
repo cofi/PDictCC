@@ -368,9 +368,9 @@ if __name__ == '__main__':
                                                   '[-v] [-S] [-h]',
                                                   '[-c] [-s | -r | -f] QUERY']))
 
-    db = parser.add_argument_group('Database building options')
-    db.add_argument('-i', '--import', metavar='DICTCC_FILE', dest='imp',
-                    help='Import dict files from dict.cc')
+    imp = parser.add_argument_group('Database building options')
+    imp.add_argument('-i', '--import', metavar='DICTCC_FILE', dest='imp',
+                     help='Import dict files from dict.cc')
 
     formatting = parser.add_argument_group('Format options')
     formatting.add_argument('-c', '--compact', action='store_true',
