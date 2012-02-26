@@ -7,7 +7,7 @@
   See [[Compatibility with RDictCc]] for more information.
 
 ** Requirements
-   - Python 2.{6,7}
+   - Python 2.7 or Python 2.6 with =argparse= module
    - GDBM bindings for Python (should come with Python, if you see an
      =ImportError= it does not; on Debian GNU/Linux you should install the
      =python-gdbm= package)
