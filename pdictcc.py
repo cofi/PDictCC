@@ -21,17 +21,16 @@
 # PDictCC is a tool for offline dictionary lookup based on dict.cc databases
 # that tries to be a compatible replacement of Tassilo Horn's RDictCC:
 # http://www.tsdh.de/cgi-bin/wiki.pl/RDictCc
-
 from __future__ import print_function, unicode_literals
 
-import anydbm
 import codecs
+import gdbm
 import os
 import re
 import sys
+from collections import defaultdict
 from itertools import chain
 from textwrap import dedent
-from collections import defaultdict
 
 
 __version__ = ('0', '2')
@@ -43,7 +42,7 @@ class DBException(Exception):
 
 class DB(object):
     """
-    Anydbm wrapper that tries to cover the deficiencies of anydbm database
+    Gdbm wrapper that tries to cover the deficiencies of gdbm database
     objects.
 
     DB is a context manager that opens its database on entry and closes it on
@@ -86,7 +85,7 @@ class DB(object):
         if not os.path.exists(self.path):
             print('Path "{0}" does not exist, will create it.'.format(self.path))
         if self._accessors == 0:
-            self.db = anydbm.open(self.path, self._open_flags)
+            self.db = gdbm.open(self.path, self._open_flags)
         self._accessors += 1
         return self
 
