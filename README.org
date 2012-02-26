@@ -1,0 +1,152 @@
+* PDictCC
+  PDictCC is a Python port of Tassilo Horn's great [[http://www.tsdh.de/cgi-bin/wiki.pl/RDictCc][RDictCc]] that sprang into
+  existance because RDictCc takes its time to import a dictionary (> 5 minutes
+  here) whereas PDictCC is at ~ 30 seconds.
+  It tries to be compatible with it where it is sensible and possible.
+
+  See [[Compatibility with RDictCc]] for more information.
+
+** Importing a dict.cc dictionary
+   You can get a dict.cc dictionary by filing a request [[http://www1.dict.cc/translation_file_request.php][here]].
+
+   Only one dictionary (e.g. DE => EN) is needed for lookup from words from both
+   directions (i.e DE => EN, EN => DE) as PDictCC constructs two databases from
+   one dictionary.
+
+   To import that dictionary into PDictCC's format invoke =pdictcc -i dictionary.txt=.
+   (This currently takes a lot of memory, ~500 MB for DE=>EN, you have been warned!)
+
+   At the moment only one dictionary is supported at a time.
+
+** Querying from the commandline
+   You can query the database from the commandline as a simple lookup:
+   #+BEGIN_EXAMPLE
+   cofi@hitchhiker %> pdictcc flask
+   =============== [ EN => DE ] ===============
+   flask:
+       - Fläschchen {n}
+       - Flachmann {m}
+       - Flasche {f}
+       - Formkasten {m}
+       - Kolben {m}
+   hip flask:
+       - Flachmann {m}
+   (glass) flask:
+       - Glaskolben {m} [Laborgerät]
+   #+END_EXAMPLE
+   as a regular expression (tests the key, i.e. longest word in the phrase to
+   translate):
+   #+BEGIN_EXAMPLE
+   cofi@hitchhiker %> pdictcc -r '^B.*königin'
+   =============== [ DE => EN ] ===============
+   Bienenkönigin {f}:
+       - queen bee
+   Die Bienenkönigin [Brüder Grimm]:
+       - The Queen Bee [Grimm Brothers]
+   Ballkönigin {f}:
+       - belle of the ball
+       - prom queen [Am.] [Can.]
+   #+END_EXAMPLE
+   or as a fulltext search (currently broken):
+   #+BEGIN_EXAMPLE
+   cofi@hitchhiker %> pdictcc -f 'sag niemals nie'
+   ...
+   #+END_EXAMPLE
+
+   Querying the database as a regular expression and a fulltext search performs
+   a full scan of the database, so it will take longer than a simple lookup.
+
+** Using the interactive mode
+   If you invoke =pdictcc= without a query you will enter the interative mode.
+   This is handy if you have translate multiple words in a row.
+
+   Every query you type will be translated as a simple lookup.
+   If you prefix your query with =:r:= or =:f:= you will execute a regular
+   expresion query respective a fulltext query.
+
+   Here is an example Session (with an DE=>EN dictionary):
+   #+BEGIN_EXAMPLE
+   cofi@hitchhiker %> pdictcc
+   Welcome to the interactive mode: You can type queries here.
+   Prefix your query with `:r:` to issue a regular expression query andwith `:f:` for a fulltext query.
+   Enter C-d (Ctrl + d) to exit.
+   => Schaf
+   =============== [ DE => EN ] ===============
+   Schaf {n}:
+       - jumbuck [Aus.] [Aboriginal]
+       - sheep [Ovis]
+   Schaf {n} [Begriff aus austral. Pionierzeit]:
+       - jumbuck [Aus.] [coll.]
+   wie ein Schaf:
+       - sheepish
+   => jumbuck
+   =============== [ EN => DE ] ===============
+   jumbuck [Aus.] [Aboriginal]:
+       - Schaf {n}
+   jumbuck [Aus.] [coll.]:
+       - Schaf {n} [Begriff aus austral. Pionierzeit]
+   => :r:^a(p|ff)e$
+   =============== [ DE => EN ] ===============
+   Affe {m} [ugs.]:
+       - knapsack
+   Affe {m} [Menschenaffe]:
+       - ape
+   Affe {m}:
+       - monkey
+   wie ein Affe:
+       - apelike
+   Der Affe:
+       - The Monkey [Stephen King]
+   Ape {f} [dreirädiges Rollermobil, Kleintransporter]:
+       - (Piaggio) Ape / Apecar ® [also used as an autorickshaw]
+   =============== [ EN => DE ] ===============
+   ape:
+       - Affe {m} [Menschenaffe]
+   ape [coll.]:
+       - Tollpatsch {m} [ugs.]
+   to ape sb.:
+       - jdn. imitieren
+       - jdn. nachäffen [ugs.]
+       - jdn. nachmachen
+   to go ape [sl.]:
+       - ausflippen [ugs.]
+   =>
+   Bye.
+   #+END_EXAMPLE
+
+** Using a non-default database directory
+   If you don't want to use the PDictCC default directory (=$HOME/.pdictcc=) you
+   can specify a different directory path with the =--directory= parameter:
+   #+BEGIN_EXAMPLE
+   pdictcc -d ~/.local/share/pdict/ -i dictionary.txt
+   #+END_EXAMPLE
+
+   But you have to specify the path everytime you query the database:
+   #+BEGIN_EXAMPLE
+   pdictcc -d ~/.local/share/pdict/ dictionary
+   #+END_EXAMPLE
+   or with the interactive mode:
+   #+BEGIN_EXAMPLE
+   pdictcc -d ~/.local/share/pdict/
+   #+END_EXAMPLE
+
+** Integration with Emacs
+   PDictCC integrates with RDictCc's Emacs package =rdictcc.el=.
+
+   If you set this in your Emacs config you should be good to go:
+   #+BEGIN_SRC emacs-lisp
+   (setq rdictcc-program "path/to/pdictcc")
+   #+END_SRC
+
+   See [[http://www.tsdh.de/cgi-bin/wiki.pl/RDictCc][The RDictCc website]] for more information.
+
+** Compatibility with RDictCc
+   I tried to keep the database format compatible with RDictCc but there are
+   differences between Python's and Ruby's (G)DBM Modules that make it difficult
+   to use the same files (file _name_ issues).
+   Once you map them onto each other you /should/ use PDictCC with RDictCc
+   databases and vice versa.
+   But I don't see it as a priority.
+
+   PDictCC is fully compatible with RDictCc's commandline arguments and mostly
+   with the output formatting.
