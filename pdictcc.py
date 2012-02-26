@@ -163,34 +163,9 @@ def execute_query(query, compact=False):
     for lang, dir_default in DB.databases:
         with DB(lang) as db:
             result.append(header_fmt.format(db.header() or dir_default))
-            result.append(format_entry(qfun(query, db), compact))
+            query_result = [entry.format(compact) for entry in qfun(query, db)]
+            result.extend(query_result)
     return '\n'.join(result)
-
-def format_entry(entry, compact=False):
-    """
-    Return the entry formatted.
-
-    :param entry: the entry to format
-    :type entry: unicode
-    :param compact: flag to format results compact
-    :type compact: bool
-    """
-    if compact:
-        fmt = '- {0}: {1}'
-        joint = ' / '
-    else:
-        fmt ='{0}:\n    - {1}'
-        joint = '\n    - '
-    parts = list(chain.from_iterable(e.strip().split('#<>#') for e in entry))
-    res = []
-    for p in parts:
-        if not p:
-            continue
-        e = p.split('=<>')
-        head, tails = e[0], (t.split(':<>:') for t in e[1:])
-        res.append(fmt.format(head, joint.join(chain.from_iterable(tails))))
-
-    return '\n'.join(res)
 
 def query_simple(query, db):
     """
@@ -203,7 +178,7 @@ def query_simple(query, db):
     :param db: the database object to query
     :type db: :class:`DB`
     """
-    return [db.get(query, '')]
+    return [Entry.from_serialized(db.get(query, ''))]
 
 def query_regexp(query, db):
     """
@@ -217,7 +192,7 @@ def query_regexp(query, db):
     :type db: :class:`DB`
     """
     rx = re.compile(query)
-    return [v for k, v in db if rx.match(k)]
+    return [Entry.from_serialized(v) for k, v in db if rx.match(k)]
 
 def query_fulltext(query, db):
     """
@@ -231,7 +206,7 @@ def query_fulltext(query, db):
     :type db: :class:`DB`
     """
     rx = re.compile(query, re.IGNORECASE)
-    return [v for k, v in db if rx.search(v)]
+    return [Entry.from_serialized(v) for k, v in db if rx.search(v)]
 
 def interactive_mode():
     """
@@ -259,13 +234,42 @@ class Entry(object):
     def __init__(self):
         self.dictionary = defaultdict(list)
 
+    @staticmethod
+    def from_serialized(serialized):
+        entry = Entry()
+        if not serialized:
+            return entry
+        phrase_groups = serialized.split('#<>#')
+        for pg in phrase_groups:
+            phrase, translations = pg.split('=<>')
+            entry.dictionary[phrase] = translations.split(':<>:')
+
+        return entry
+
     def add(self, phrase, translation):
         """
         Add phrase and its translation to this entry.
         """
         self.dictionary[phrase.strip()].append(translation.strip())
 
-    def format(self):
+    def format(self, compact=False):
+        """
+        Return the entry formatted for output.
+
+        :param compact: flag to format results compact
+        :type compact: bool
+        """
+        if compact:
+            fmt = '- {0}: {1}'
+            sep = ' / '
+        else:
+            fmt ='{0}:\n    - {1}'
+            sep = '\n    - '
+
+        return '\n'.join(fmt.format(phrase, sep.join(translations))
+                         for phrase, translations in self.dictionary.iteritems())
+
+    def serialize(self):
         """
         Return this entry formatted suitable for storage in database.
 
@@ -309,7 +313,7 @@ def import_dictionary(path):
                     if key == DB.LANG_DIR_KEY:
                         db[key] = value
                     else:
-                        db[key] = value.format()
+                        db[key] = value.serialize()
         return len(a), len(b)
 
 def extract_key(phrase):
