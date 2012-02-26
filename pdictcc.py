@@ -157,6 +157,12 @@ class Entry(object):
 
     @staticmethod
     def from_serialized(serialized):
+        """
+        Construct an Entry from the serialized form stored in the db.
+
+        :param serialized: serialized form to build from
+        :type serialized: unicode
+        """
         entry = Entry()
         if not serialized:
             return entry
