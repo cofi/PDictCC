@@ -85,7 +85,7 @@
    #+BEGIN_EXAMPLE
    cofi@hitchhiker %> pdictcc
    Welcome to the interactive mode: You can type queries here.
-   Prefix your query with `:r:` to issue a regular expression query andwith `:f:` for a fulltext query.
+   Prefix your query with `:r:` to issue a regular expression query or with `:f:` for a fulltext query.
    Enter C-d (Ctrl + d) to exit.
    => Schaf
    =============== [ DE => EN ] ===============

@@ -354,7 +354,7 @@ def interactive_mode():
     import readline
     readline.read_init_file()
     print('Welcome to the interactive mode: You can type queries here.\n'
-          'Prefix your query with `:r:` to issue a regular expression query and'
+          'Prefix your query with `:r:` to issue a regular expression query or '
           'with `:f:` for a fulltext query.\n'
           'Enter C-d (Ctrl + d) to exit.')
     try:
