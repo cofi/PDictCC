@@ -429,12 +429,13 @@ if __name__ == '__main__':
 
         elif args.query:
             for q in args.query:
-                q = q.decode(sys.stdin.encoding)
+                q = q.decode(sys.stdin.encoding or 'utf-8')
                 if args.regexp:
                     q = ':r:' + q
                 elif args.fulltext:
                     q = ':f:' + q
-                print(execute_query(q, args.compact))
+                print(execute_query(q, args.compact)
+                      .encode(sys.stdin.encoding or 'utf-8'))
 
         else:
             interactive_mode()
