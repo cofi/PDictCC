@@ -148,7 +148,7 @@ def query_regexp(query, db):
 
 def query_fulltext(query, db):
     rx = re.compile(query, re.IGNORECASE)
-    return [v for k, v in db if rx.search(k)]
+    return [v for k, v in db if rx.search(v)]
 
 def interactive_mode():
     try:
