@@ -239,6 +239,10 @@ def interactive_mode():
 
     See :func:`execute_query`.
     """
+    print('Welcome to the interactive mode: You can type queries here.\n'
+          'Prefix your query with `:r:` to issue a regular expression query and'
+          'with `:f:` for a fulltext query.\n'
+          'Enter C-d (Ctrl + d) to exit.')
     try:
         while True:
             query = raw_input('=> ').strip()
