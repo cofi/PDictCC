@@ -359,7 +359,7 @@ def interactive_mode():
         while True:
             query = raw_input('=> ').strip().decode(sys.stdin.encoding)
             print(format_query_result(execute_query(query))
-                  .encode(sys.stdout.encode or 'utf-8'))
+                  .encode(sys.stdout.encoding or 'utf-8'))
 
     except EOFError:
         print()
