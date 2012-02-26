@@ -240,7 +240,7 @@ def import_dictionary(path):
                 key = extract_key(phrase)
                 if key:
                     d[key].add(phrase, translation)
-                phrase, translation = translation.split('\t')[0], phrase
+                phrase, translation = translation, phrase
 
         for d, db_name in [(a, 'a'), (b, 'b')]:
             with DB(db_name, True) as db:
