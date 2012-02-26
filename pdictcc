@@ -32,7 +32,7 @@ from collections import defaultdict
 from textwrap import dedent, wrap
 
 
-__version__ = ('0', '3')
+__version__ = ('0', '9')
 ENCODING = 'utf-8'
 
 
@@ -344,6 +344,7 @@ def query_fulltext(query, db):
     :param db: the database object to query
     :type db: :class:`DB`
     """
+    # FIXME: this is too naive and has too many false positives
     rx = re.compile(query, re.IGNORECASE)
     return [Entry.from_serialized(v) for k, v in db if rx.search(v)]
 
