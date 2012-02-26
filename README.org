@@ -62,6 +62,16 @@
    Querying the database as a regular expression and a fulltext search performs
    a full scan of the database, so it will take longer than a simple lookup.
 
+   For a more compact output you can use the =--compact= parameter:
+   #+BEGIN_EXAMPLE
+   cofi@hitchhiker %> pdictcc --compact flask
+   =============== [ EN => DE ] ===============
+   flask: Fläschchen {n} / Flachmann {m} / Flasche {f} / Formkasten {m} / Kolben
+        {m}
+   hip flask: Flachmann {m}
+   (glass) flask: Glaskolben {m} [Laborgerät]
+   #+END_EXAMPLE
+
 ** Using the interactive mode
    If you invoke =pdictcc= without a query you will enter the interative mode.
    This is handy if you have translate multiple words in a row.
