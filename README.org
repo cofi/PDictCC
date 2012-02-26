@@ -6,6 +6,12 @@
 
   See [[Compatibility with RDictCc]] for more information.
 
+** Requirements
+   - Python 2.{6,7}
+   - GDBM bindings for Python (should come with Python, if you see an
+     =ImportError= it does not; on Debian GNU/Linux you should install the
+     =python-gdbm= package)
+
 ** Importing a dict.cc dictionary
    You can get a dict.cc dictionary by filing a request [[http://www1.dict.cc/translation_file_request.php][here]].
 
