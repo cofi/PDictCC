@@ -296,7 +296,7 @@ def execute_query(query, compact=False):
             result.append(header_fmt.format(db.header() or dir_default))
             query_result = [entry.format(compact) for entry in qfun(query, db)]
             # remove header if there are no results or only empty in this direction
-            if query_result and not all(not q for q in query_result):
+            if query_result:
                 result.extend(query_result)
             else:
                 result.pop()
@@ -314,7 +314,8 @@ def query_simple(query, db):
     :param db: the database object to query
     :type db: :class:`DB`
     """
-    return [Entry.from_serialized(db.get(query, ''))]
+    result = db.get(query, '')
+    return [Entry.from_serialized(result)] if result else []
 
 
 def query_regexp(query, db):
