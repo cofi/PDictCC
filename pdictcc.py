@@ -36,9 +36,13 @@ from textwrap import dedent
 __version__ = ('0', '2')
 ENCODING = 'utf-8'
 
+
+# Data representation
+
 class DBException(Exception):
     """Signal that a DB related exception happened."""
     pass
+
 
 class DB(object):
     """
@@ -55,6 +59,7 @@ class DB(object):
     DICT_DIR = os.path.expanduser('~/.pdictcc')
     FILE_SCHEME = 'dict_{0}.dbm'
     LANG_DIR_KEY = '__dictcc_lang_dir'
+
     def __init__(self, lang, importing=False):
         """
         :param lang: language identifier, db file path is constructed with it
@@ -142,93 +147,6 @@ class DB(object):
         with self:
             return self.get(DB.LANG_DIR_KEY, None)
 
-def execute_query(query, compact=False):
-    """
-    Execute a query and return the formatted results.
-
-    A query may be prefixed by :r: or :f: which stands for evaluation as a
-    regular expression and evaluation as a fulltext search which has both linear
-    complexity (O(n); n = entries in DB.)
-
-    :param query: the query
-    :type query: unicode
-    :param compact: flag to format results compact
-    :type compact: bool
-    """
-    qfun = {':r:' : query_regexp,
-            ':f:' : query_fulltext}.get(query[:3], query_simple)
-    query = query.lower() if query[:3] not in [':r:', ':f:'] else query[3:].lower()
-    header_fmt = 15 * '=' + ' [ {0} ] ' + 15 * '='
-    result = []
-    for lang, dir_default in DB.databases:
-        with DB(lang) as db:
-            result.append(header_fmt.format(db.header() or dir_default))
-            query_result = [entry.format(compact) for entry in qfun(query, db)]
-            # remove header if there are no results or only empty in this direction
-            if query_result and not all(not q for q in query_result):
-                result.extend(query_result)
-            else:
-                result.pop()
-    return '\n'.join(result) if result else 'No results.'
-
-def query_simple(query, db):
-    """
-    Query the database for exact matches of key with query.
-
-    Runs in constant complexity (O(1)).
-
-    :param query: key to lookup
-    :type query: unicode
-    :param db: the database object to query
-    :type db: :class:`DB`
-    """
-    return [Entry.from_serialized(db.get(query, ''))]
-
-def query_regexp(query, db):
-    """
-    Query the database for matches of key with query.
-
-    Runs in linear complexity (O(n); n = number of entries).
-
-    :param query: regular expression for key lookup
-    :type query: unicode
-    :param db: the database object to query
-    :type db: :class:`DB`
-    """
-    rx = re.compile(query)
-    return [Entry.from_serialized(v) for k, v in db if rx.match(k)]
-
-def query_fulltext(query, db):
-    """
-    Query the database for matches of value with query.
-
-    Runs in linear complexity (O(n); n = number of entries).
-
-    :param query: regular expression for value lookup
-    :type query: unicode
-    :param db: the database object to query
-    :type db: :class:`DB`
-    """
-    rx = re.compile(query, re.IGNORECASE)
-    return [Entry.from_serialized(v) for k, v in db if rx.search(v)]
-
-def interactive_mode():
-    """
-    Interactive mode for repeated queries against the database.
-
-    See :func:`execute_query`.
-    """
-    print('Welcome to the interactive mode: You can type queries here.\n'
-          'Prefix your query with `:r:` to issue a regular expression query and'
-          'with `:f:` for a fulltext query.\n'
-          'Enter C-d (Ctrl + d) to exit.')
-    try:
-        while True:
-            query = raw_input('=> ').strip().decode(sys.stdin.encoding)
-            print(execute_query(query))
-
-    except EOFError:
-        pass
 
 class Entry(object):
     """
@@ -267,7 +185,7 @@ class Entry(object):
             fmt = '- {0}: {1}'
             sep = ' / '
         else:
-            fmt ='{0}:\n    - {1}'
+            fmt = '{0}:\n    - {1}'
             sep = '\n    - '
 
         return '\n'.join(fmt.format(phrase, sep.join(translations))
@@ -284,6 +202,9 @@ class Entry(object):
         for phrase, translations in self.dictionary.iteritems():
             parts.append('{0}=<>{1}'.format(phrase, ':<>:'.join(translations)))
         return "#<>#".join(parts)
+
+
+# importing data
 
 def import_dictionary(path):
     """
@@ -320,6 +241,7 @@ def import_dictionary(path):
                         db[key] = value.serialize()
         return len(a), len(b)
 
+
 def extract_key(phrase):
     """
     Extract word form phrasethat looks most important as key.
@@ -337,6 +259,102 @@ def extract_key(phrase):
             longest_key = sorted(keys, key=len, reverse=True)[0]
             return longest_key
     return ''
+
+
+# querying
+
+def execute_query(query, compact=False):
+    """
+    Execute a query and return the formatted results.
+
+    A query may be prefixed by :r: or :f: which stands for evaluation as a
+    regular expression and evaluation as a fulltext search which has both linear
+    complexity (O(n); n = entries in DB.)
+
+    :param query: the query
+    :type query: unicode
+    :param compact: flag to format results compact
+    :type compact: bool
+    """
+    qfun = {':r:': query_regexp,
+            ':f:': query_fulltext}.get(query[:3], query_simple)
+    query = query.lower() if query[:3] not in [':r:', ':f:'] else query[3:].lower()
+    header_fmt = 15 * '=' + ' [ {0} ] ' + 15 * '='
+    result = []
+    for lang, dir_default in DB.databases:
+        with DB(lang) as db:
+            result.append(header_fmt.format(db.header() or dir_default))
+            query_result = [entry.format(compact) for entry in qfun(query, db)]
+            # remove header if there are no results or only empty in this direction
+            if query_result and not all(not q for q in query_result):
+                result.extend(query_result)
+            else:
+                result.pop()
+    return '\n'.join(result) if result else 'No results.'
+
+
+def query_simple(query, db):
+    """
+    Query the database for exact matches of key with query.
+
+    Runs in constant complexity (O(1)).
+
+    :param query: key to lookup
+    :type query: unicode
+    :param db: the database object to query
+    :type db: :class:`DB`
+    """
+    return [Entry.from_serialized(db.get(query, ''))]
+
+
+def query_regexp(query, db):
+    """
+    Query the database for matches of key with query.
+
+    Runs in linear complexity (O(n); n = number of entries).
+
+    :param query: regular expression for key lookup
+    :type query: unicode
+    :param db: the database object to query
+    :type db: :class:`DB`
+    """
+    rx = re.compile(query)
+    return [Entry.from_serialized(v) for k, v in db if rx.match(k)]
+
+
+def query_fulltext(query, db):
+    """
+    Query the database for matches of value with query.
+
+    Runs in linear complexity (O(n); n = number of entries).
+
+    :param query: regular expression for value lookup
+    :type query: unicode
+    :param db: the database object to query
+    :type db: :class:`DB`
+    """
+    rx = re.compile(query, re.IGNORECASE)
+    return [Entry.from_serialized(v) for k, v in db if rx.search(v)]
+
+
+def interactive_mode():
+    """
+    Interactive mode for repeated queries against the database.
+
+    See :func:`execute_query`.
+    """
+    print('Welcome to the interactive mode: You can type queries here.\n'
+          'Prefix your query with `:r:` to issue a regular expression query and'
+          'with `:f:` for a fulltext query.\n'
+          'Enter C-d (Ctrl + d) to exit.')
+    try:
+        while True:
+            query = raw_input('=> ').strip().decode(sys.stdin.encoding)
+            print(execute_query(query))
+
+    except EOFError:
+        pass
+
 
 if __name__ == '__main__':
     import argparse
