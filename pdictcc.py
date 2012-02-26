@@ -405,7 +405,7 @@ if __name__ == '__main__':
     query_mutex.add_argument('-f', '--fulltext', action='store_true',
                        help='Translate all sentences matching the regexp QUERY')
     parser.add_argument('query', metavar='QUERY', nargs='*',
-                        help='the query to search')
+                        help='the queries to search')
 
     args = parser.parse_args()
 
