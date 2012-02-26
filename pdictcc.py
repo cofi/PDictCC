@@ -32,7 +32,7 @@ from collections import defaultdict
 from textwrap import dedent
 
 
-__version__ = ('0', '2')
+__version__ = ('0', '3')
 ENCODING = 'utf-8'
 
 
