@@ -409,7 +409,7 @@ if __name__ == '__main__':
                                                   '[-v] [-S] [-h]',
                                                   '[-c | -j] [-s | -r | -f] '
                                                   'QUERY [QUERY ...]',
-                                                  '(interacttive mode)']))
+                                                  '(interactive mode)']))
 
     imp = parser.add_argument_group('Database building options')
     imp.add_argument('-i', '--import', metavar='DICTCC_FILE', dest='imp',
