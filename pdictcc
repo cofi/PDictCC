@@ -273,9 +273,9 @@ def extract_key(phrase):
 
 # querying
 
-def execute_query(query, compact=False):
+def execute_query(query):
     """
-    Execute a query and return the formatted results.
+    Execute a query and return the results.
 
     A query may be prefixed by :r: or :f: which stands for evaluation as a
     regular expression and evaluation as a fulltext search which has both linear
@@ -283,24 +283,19 @@ def execute_query(query, compact=False):
 
     :param query: the query
     :type query: unicode
-    :param compact: flag to format results compact
-    :type compact: bool
     """
     qfun = {':r:': query_regexp,
             ':f:': query_fulltext}.get(query[:3], query_simple)
     query = query.lower() if query[:3] not in [':r:', ':f:'] else query[3:].lower()
-    header_fmt = 15 * '=' + ' [ {0} ] ' + 15 * '='
     result = []
     for lang, dir_default in DB.databases:
         with DB(lang) as db:
-            result.append(header_fmt.format(db.header() or dir_default))
-            query_result = [entry.format(compact) for entry in qfun(query, db)]
+            header = db.header() or dir_default
+            query_result = qfun(query, db)
             # remove header if there are no results or only empty in this direction
             if query_result:
-                result.extend(query_result)
-            else:
-                result.pop()
-    return '\n'.join(result) if result else 'No results.'
+                result.append((header, query_result))
+    return result
 
 
 def query_simple(query, db):
@@ -362,7 +357,8 @@ def interactive_mode():
     try:
         while True:
             query = raw_input('=> ').strip().decode(sys.stdin.encoding)
-            print(execute_query(query))
+            print(format_query_result(execute_query(query))
+                  .encode(sys.stdout.encode or 'utf-8'))
 
     except EOFError:
         print()
@@ -370,6 +366,23 @@ def interactive_mode():
 
 
 if __name__ == '__main__':
+def format_query_result(result, compact=False):
+    """
+    Format the result of a query.
+
+    :param result: list of header, entries pairs for entries matching query
+    :type result: list
+    :param compact: flag to format results compact
+    :type compact: bool
+    """
+    f = "=============== [ {0} ] ===============\n{1}"
+    if not result:
+        return 'No results.'
+
+    return '\n'.join(f.format(head, '\n'.join(e.format(compact) for e in entries))
+                     for head, entries in result)
+
+
     import argparse
 
     parser = argparse.ArgumentParser(add_help=False,
@@ -429,13 +442,13 @@ if __name__ == '__main__':
             print('Imported {0} (A => B) and {1} (B => A) entries'.format(*counts))
 
         elif args.query:
-            for q in args.query:
-                q = q.decode(sys.stdin.encoding or 'utf-8')
+            queries = (q.decode(sys.stdin.encoding or 'utf-8') for q in args.query)
+            for q in queries:
                 if args.regexp:
                     q = ':r:' + q
                 elif args.fulltext:
                     q = ':f:' + q
-                print(execute_query(q, args.compact)
+                print(format_query_result(execute_query(q), args.compact)
                       .encode(sys.stdin.encoding or 'utf-8'))
 
         else:
