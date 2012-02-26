@@ -373,12 +373,14 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(add_help=False,
                                      usage='\n       '
-                                           .join('%(prog)s [-d] {0}'
+                                           .join('%(prog)s [-d PATH] {0}'
                                                  .format(opts)
                                                  for opts in
                                                  ['[-i DICTCC_FILE]',
                                                   '[-v] [-S] [-h]',
-                                                  '[-c] [-s | -r | -f] QUERY']))
+                                                  '[-c] [-s | -r | -f] QUERY'
+                                                  ' [QUERY ...]',
+                                                  '(interacttive mode)']))
 
     imp = parser.add_argument_group('Database building options')
     imp.add_argument('-i', '--import', metavar='DICTCC_FILE', dest='imp',
@@ -394,7 +396,7 @@ if __name__ == '__main__':
     misc.add_argument('-S', '--size', action='store_true',
                       help='Show the number of entries in the databases')
     misc.add_argument('-d', '--directory', metavar='PATH',
-                      help='Use PATH instead of ~/.rdictcc')
+                      help='Use PATH instead of {0}'.format(DB.DICT_DIR))
     misc.add_argument('-h', '--help', action='help',
                       help='Show this help message and exit')
 
