@@ -207,7 +207,7 @@ def extract_key(phrase):
     if key:
         keys = [key.strip() for key in re.sub(r'[.,<>]', ' ', key).strip().split()]
         if keys:
-            longest_key = sorted(keys, key=len)[-1]
+            longest_key = sorted(keys, key=len, reverse=True)[0]
             return longest_key
     return ''
 
