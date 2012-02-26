@@ -35,6 +35,7 @@ from collections import defaultdict
 
 
 __version__ = ('0', '2')
+ENCODING = 'utf-8'
 
 class DBException(Exception):
     pass
@@ -87,11 +88,11 @@ class DB(object):
             key = self.db.nextkey(key)
 
     def __setitem__(self, key, value):
-        self.db[key.encode('utf-8')] = value.encode('utf-8')
+        self.db[key.encode(ENCODING)] = value.encode(ENCODING)
 
     def get(self, key, default=False):
         try:
-            return self.db[key].decode('utf-8')
+            return self.db[key.encode(ENCODING)].decode(ENCODING)
         except KeyError:
             if default is False:
                 raise
@@ -175,7 +176,7 @@ class Entry(object):
 def import_dictionary(path):
     a = defaultdict(Entry)
     b = defaultdict(Entry)
-    with codecs.open(path, encoding='utf-8') as f:
+    with codecs.open(path, encoding=ENCODING) as f:
         head = re.match('# ([A-Z]{2})-([A-Z]{2}) vocabulary database', next(f))
         if not head:
             raise ValueError('"{0}" is not a dict.cc database'.format(path))
