@@ -77,7 +77,7 @@ class DB(object):
                     See --help for information.
                     """.format(DB.DICT_DIR)))
             else:
-                os.mkdir(DB.DICT_DIR)
+                os.makedirs(DB.DICT_DIR)
         else:
             if os.path.exists(self.path) and importing:
                 print('Will overwrite "{0}"'.format(self.path))
