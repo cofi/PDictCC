@@ -74,7 +74,8 @@
 
 ** Using the interactive mode
    If you invoke =pdictcc= without a query you will enter the interative mode.
-   This is handy if you have translate multiple words in a row.
+   The interactive mode has readline support and is quite handy if you want to
+   translate several words in a row or over time.
 
    Every query you type will be translated as a simple lookup.
    If you prefix your query with =:r:= or =:f:= you will execute a regular

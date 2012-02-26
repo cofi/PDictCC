@@ -351,6 +351,8 @@ def interactive_mode():
 
     See :func:`execute_query`.
     """
+    import readline
+    readline.read_init_file()
     print('Welcome to the interactive mode: You can type queries here.\n'
           'Prefix your query with `:r:` to issue a regular expression query and'
           'with `:f:` for a fulltext query.\n'
