@@ -38,14 +38,31 @@ __version__ = ('0', '2')
 ENCODING = 'utf-8'
 
 class DBException(Exception):
+    """Signal that a DB related exception happened."""
     pass
 
 class DB(object):
+    """
+    Anydbm wrapper that tries to cover the deficiencies of anydbm database
+    objects.
+
+    DB is a context manager that opens its database on entry and closes it on
+    exit.
+
+    DB is an iterator that returns key value pairs if it is iterated on (DB
+    needs to be opened).
+    """
     databases = [('a', 'A => B'), ('b', 'B => A')]
     DICT_DIR = os.path.expanduser('~/.pdictcc')
     FILE_SCHEME = 'dict_{0}.dbm'
     LANG_DIR_KEY = '__dictcc_lang_dir'
     def __init__(self, lang, importing=False):
+        """
+        :param lang: language identifier, db file path is constructed with it
+        :type lang: unicode
+        :param importing: flag that indicates if DB is used for importing
+        :type importing: bool
+        """
         self.path = os.path.join(DB.DICT_DIR, DB.FILE_SCHEME.format(lang))
         self._open_flags = 'n' if importing else 'c'
         if not os.path.exists(DB.DICT_DIR):
@@ -90,7 +107,20 @@ class DB(object):
     def __setitem__(self, key, value):
         self.db[key.encode(ENCODING)] = value.encode(ENCODING)
 
+    def __getitem__(self, key):
+        return self.get(key)
+
     def get(self, key, default=False):
+        """
+        Return the value stored in key. If key is not found return ``default``.
+
+        :raises: :exc:`KeyError` if key is not found and ``default`` is ``False``.
+
+        :param key: the key to lookup
+        :type key: unicode
+        :param default: the value to return if lookup failed
+        :type default: unicode
+        """
         try:
             return self.db[key.encode(ENCODING)].decode(ENCODING)
         except KeyError:
@@ -100,17 +130,32 @@ class DB(object):
                 return default
 
     def size(self):
+        """
+        Return the number of entries in the db.
+        """
         with self:
             return sum(1 for _ in self)
 
     def header(self):
+        """
+        Return the language header stored in the DB or ``None`` if there is none.
+        """
         with self:
             return self.get(DB.LANG_DIR_KEY, None)
 
-    def __getitem__(self, key):
-        return self.get(key)
-
 def execute_query(query, compact=False):
+    """
+    Execute a query and return the formatted results.
+
+    A query may be prefixed by :r: or :f: which stands for evaluation as a
+    regular expression and evaluation as a fulltext search which has both linear
+    complexity (O(n); n = entries in DB.)
+
+    :param query: the query
+    :type query: unicode
+    :param compact: flag to format results compact
+    :type compact: bool
+    """
     qfun = {':r:' : query_regexp,
             ':f:' : query_fulltext}.get(query[:3], query_simple)
     query = query.lower() if query[:3] not in [':r:', ':f:'] else query[3:].lower()
@@ -123,6 +168,14 @@ def execute_query(query, compact=False):
     return '\n'.join(result)
 
 def format_entry(entry, compact=False):
+    """
+    Return the entry formatted.
+
+    :param entry: the entry to format
+    :type entry: unicode
+    :param compact: flag to format results compact
+    :type compact: bool
+    """
     if compact:
         fmt = '- {0}: {1}'
         joint = ' / '
@@ -141,17 +194,52 @@ def format_entry(entry, compact=False):
     return '\n'.join(res)
 
 def query_simple(query, db):
+    """
+    Query the database for exact matches of key with query.
+
+    Runs in constant complexity (O(1)).
+
+    :param query: key to lookup
+    :type query: unicode
+    :param db: the database object to query
+    :type db: :class:`DB`
+    """
     return [db.get(query, '')]
 
 def query_regexp(query, db):
+    """
+    Query the database for matches of key with query.
+
+    Runs in linear complexity (O(n); n = number of entries).
+
+    :param query: regular expression for key lookup
+    :type query: unicode
+    :param db: the database object to query
+    :type db: :class:`DB`
+    """
     rx = re.compile(query)
     return [v for k, v in db if rx.match(k)]
 
 def query_fulltext(query, db):
+    """
+    Query the database for matches of value with query.
+
+    Runs in linear complexity (O(n); n = number of entries).
+
+    :param query: regular expression for value lookup
+    :type query: unicode
+    :param db: the database object to query
+    :type db: :class:`DB`
+    """
     rx = re.compile(query, re.IGNORECASE)
     return [v for k, v in db if rx.search(v)]
 
 def interactive_mode():
+    """
+    Interactive mode for repeated queries against the database.
+
+    See :func:`execute_query`.
+    """
     try:
         while True:
             query = raw_input('=> ').strip()
@@ -161,19 +249,38 @@ def interactive_mode():
         pass
 
 class Entry(object):
+    """
+    An entry is the collaction of all phrases and corresponding translations
+    that share a key.
+    """
     def __init__(self):
         self.dictionary = defaultdict(list)
 
     def add(self, phrase, translation):
+        """
+        Add phrase and its translation to this entry.
+        """
         self.dictionary[phrase.strip()].append(translation.strip())
 
     def format(self):
+        """
+        Return this entry formatted suitable for storage in database.
+
+        Different phrases are separated by '#<>#' phrases from translations by
+        '=<>' and translations from each other by ':<>:'.
+        """
         parts = []
         for phrase, translations in self.dictionary.iteritems():
             parts.append('{0}=<>{1}'.format(phrase, ':<>:'.join(translations)))
         return "#<>#".join(parts)
 
 def import_dictionary(path):
+    """
+    Import dictionary from dict.cc TSV file and return the count of entries.
+
+    :param path: file name of TSV to import
+    :type path: str
+    """
     a = defaultdict(Entry)
     b = defaultdict(Entry)
     with codecs.open(path, encoding=ENCODING) as f:
@@ -203,6 +310,15 @@ def import_dictionary(path):
         return len(a), len(b)
 
 def extract_key(phrase):
+    """
+    Extract word form phrasethat looks most important as key.
+
+    Ignores everything that is enclosed in parenthesis and chooses the longest
+    left over word.
+
+    :param phrase: phrase to extract key from
+    :type phrase: unicode
+    """
     key = re.sub(r'(\([^(]*\)|\{[^{]*\}|\[[^\[]*\])', '', phrase.lower())
     if key:
         keys = [key.strip() for key in re.sub(r'[.,<>]', ' ', key).strip().split()]
@@ -270,6 +386,7 @@ if __name__ == '__main__':
 
         elif args.query:
             for q in args.query:
+                q = q.decode(sys.stdin.encoding)
                 if args.regexp:
                     q = ':r:' + q
                 elif args.fulltext:
@@ -282,4 +399,3 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
         sys.exit(1)
-                q = q.decode(sys.stdin.encoding)
