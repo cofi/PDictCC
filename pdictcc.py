@@ -29,7 +29,7 @@ import os
 import re
 import sys
 from collections import defaultdict
-from textwrap import dedent
+from textwrap import dedent, wrap
 
 
 __version__ = ('0', '3')
@@ -180,15 +180,20 @@ class Entry(object):
         :param compact: flag to format results compact
         :type compact: bool
         """
+        wrap_ = lambda s: '\n'.join(wrap(s, width=72, subsequent_indent=5 * ' '))
         if compact:
-            fmt = '- {0}: {1}'
             sep = ' / '
+            items = [(phrase, wrap_(sep.join(translations)))
+                     for phrase, translations in self.dictionary.iteritems()]
         else:
-            fmt = '{0}:\n    - {1}'
             sep = '\n    - '
+            items = [(phrase, sep + sep.join(wrap_(t) for t in translations))
+                     for phrase, translations in self.dictionary.iteritems()]
 
-        return '\n'.join(fmt.format(phrase, sep.join(translations))
-                         for phrase, translations in self.dictionary.iteritems())
+        text = '\n'.join('{0}: {1}'.format(phrase, translations)
+                         for phrase, translations in items)
+
+        return text
 
     def serialize(self):
         """
