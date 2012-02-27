@@ -156,15 +156,15 @@ class Entry(object):
     def __init__(self):
         self.dictionary = defaultdict(list)
 
-    @staticmethod
-    def from_serialized(serialized):
+    @classmethod
+    def from_serialized(cls, serialized):
         """
         Construct an Entry from the serialized form stored in the db.
 
         :param serialized: serialized form to build from
         :type serialized: unicode
         """
-        entry = Entry()
+        entry = cls()
         if not serialized:
             return entry
         phrase_groups = serialized.split('#<>#')
