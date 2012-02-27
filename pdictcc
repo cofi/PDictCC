@@ -442,6 +442,9 @@ if __name__ == '__main__':
                       help='Show the number of entries in the databases')
     misc.add_argument('-d', '--directory', metavar='PATH',
                       help='Use PATH instead of {0}'.format(DB.DICT_DIR))
+    misc.add_argument('-H', '--histfile', metavar='HISTFILE',
+                      help='Use HISTFILE instead of "{0}"'.format(HISTORYFILE))
+
     misc.add_argument('--debug', action='store_true',
                       help='Show debug information')
     misc.add_argument('-h', '--help', action='help',
@@ -462,6 +465,8 @@ if __name__ == '__main__':
 
     if args.directory:
         DB.DICT_DIR = os.path.expanduser(args.directory)
+    if args.histfile:
+        HISTORYFILE = os.path.expanduser(args.histfile)
     try:
         if args.size:
             for lang, lang_desc in DB.databases:
