@@ -35,6 +35,7 @@ from textwrap import dedent, wrap
 
 __version__ = ('0', '9')
 ENCODING = 'utf-8'
+HISTORYFILE = os.path.expanduser('~/.pdictcchistory')
 
 
 # Data representation
@@ -351,8 +352,16 @@ def interactive_mode():
 
     See :func:`execute_query`.
     """
-    import readline
-    readline.read_init_file()
+    try:
+        import readline
+        readline.read_init_file()
+        try:
+            readline.read_history_file(HISTORYFILE)
+        except IOError:
+            print('No history available, tried "{0}"'.format(HISTORYFILE))
+    except ImportError:
+        pass
+
     print('Welcome to the interactive mode: You can type queries here.\n'
           'Prefix your query with `:r:` to issue a regular expression query or '
           'with `:f:` for a fulltext query.\n'
@@ -364,6 +373,10 @@ def interactive_mode():
                   .encode(sys.stdout.encoding or 'utf-8'))
 
     except EOFError:
+        try:
+            readline.write_history_file(HISTORYFILE)
+        except NameError:       # no readline imported
+            pass
         print()
         print('Bye.')
 
@@ -429,6 +442,8 @@ if __name__ == '__main__':
                       help='Show the number of entries in the databases')
     misc.add_argument('-d', '--directory', metavar='PATH',
                       help='Use PATH instead of {0}'.format(DB.DICT_DIR))
+    misc.add_argument('--debug', action='store_true',
+                      help='Show debug information')
     misc.add_argument('-h', '--help', action='help',
                       help='Show this help message and exit')
 
@@ -442,8 +457,6 @@ if __name__ == '__main__':
                        help='Translate all sentences matching the regexp QUERY')
     parser.add_argument('query', metavar='QUERY', nargs='*',
                         help='the queries to search')
-    misc.add_argument('--debug', action='store_true',
-                      help='Show debug information')
 
     args = parser.parse_args()
 
