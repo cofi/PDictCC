@@ -428,17 +428,17 @@ if __name__ == '__main__':
         def __call__(self, parser, namespace, values, option_string=None):
             setattr(namespace, self.dest, os.path.expanduser(values))
 
+    parts = [('Import', '[-i DICTCC_FILE]'),
+             ('Query', '[-w WIDTH] [-c | -j] [-s | -r | -f] QUERY [QUERY ...]'),
+             ('Interactive', '[-H HISTFILE]'),
+             ('Information', '[-v] [-S] [-h]')]
 
-    usage = '\n       '\
-            .join('%(prog)s [-d PATH] {0}'
-                  .format(opts)
-                  for opts in
-                  ['[-i DICTCC_FILE]',
-                   '[-v] [-S] [-h]',
-                   '[-w WIDTH] [-c | -j] [-s | -r | -f] QUERY [QUERY ...]',
-                   '[-H HISTFILE] (interactive mode)'])
+    usage = '\n'.join('{{0:>{0}}}: %(prog)s [-d PATH] {{1}}'
+                      .format(max(len(desc) for desc, _ in parts))
+                      .format(desc, opts)
+                      for desc, opts in parts)
 
-    parser = argparse.ArgumentParser(add_help=False, usage=usage)
+    parser = argparse.ArgumentParser(add_help=False, usage='\n' + usage)
 
     imp = parser.add_argument_group('Database building options')
     imp.add_argument('-i', '--import', metavar='DICTCC_FILE', dest='imp',
