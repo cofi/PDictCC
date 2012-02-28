@@ -387,7 +387,7 @@ def interactive_mode(history):
         print('Bye.')
 
 
-def format_query_result(result, compact, width):
+def format_query_result(result, compact=False, width=72):
     """
     Format the result of a query.
 
