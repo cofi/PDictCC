@@ -422,6 +422,13 @@ if __name__ == '__main__':
     import argparse
 
     usage = '\n       '\
+
+    class UserExpandAction(argparse.Action):
+        """Action to expand the path passed to it."""
+        def __call__(self, parser, namespace, values, option_string=None):
+            setattr(namespace, self.dest, os.path.expanduser(values))
+
+
             .join('%(prog)s [-d PATH] {0}'
                   .format(opts)
                   for opts in
@@ -452,9 +459,13 @@ if __name__ == '__main__':
     misc.add_argument('-S', '--size', action='store_true',
                       help='Show the number of entries in the databases')
     misc.add_argument('-d', '--directory', metavar='PATH',
-                      help='Use PATH instead of "{0}"'.format(DB.DICT_DIR))
+                      default=os.path.expanduser('~/.pdictcc'),
+                      action=UserExpandAction,
+                      help='Use PATH instead of "%(default)s"')
     misc.add_argument('-H', '--histfile', metavar='HISTFILE',
-                      help='Use HISTFILE instead of "{0}"'.format(HISTORYFILE))
+                      default=os.path.expanduser('~/.pdictcchistory'),
+                      action=UserExpandAction,
+                      help='Use HISTFILE instead of "%(default)s"')
 
     misc.add_argument('--debug', action='store_true',
                       help='Show debug information')
