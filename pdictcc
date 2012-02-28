@@ -413,16 +413,16 @@ def dump_query_results(query_results):
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser(add_help=False,
-                                     usage='\n       '
-                                           .join('%(prog)s [-d PATH] {0}'
-                                                 .format(opts)
-                                                 for opts in
-                                                 ['[-i DICTCC_FILE]',
-                                                  '[-v] [-S] [-h]',
-                                                  '[-c | -j] [-s | -r | -f] '
-                                                  'QUERY [QUERY ...]',
-                                                  '(interactive mode)']))
+    usage = '\n       '\
+            .join('%(prog)s [-d PATH] {0}'
+                  .format(opts)
+                  for opts in
+                  ['[-i DICTCC_FILE]',
+                   '[-v] [-S] [-h]',
+                   '[-c | -j] [-s | -r | -f] QUERY [QUERY ...]',
+                   '(interactive mode)'])
+
+    parser = argparse.ArgumentParser(add_help=False, usage=usage)
 
     imp = parser.add_argument_group('Database building options')
     imp.add_argument('-i', '--import', metavar='DICTCC_FILE', dest='imp',
