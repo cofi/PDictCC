@@ -181,14 +181,19 @@ class Entry(object):
         """
         self.dictionary[phrase.strip()].append(translation.strip())
 
-    def format(self, compact=False):
+    def format(self, compact, wrap_width):
         """
         Return the entry formatted for output.
 
         :param compact: flag to format results compact
         :type compact: bool
+        :param wrap_width: width to wrap at
+        :type wrap_width: int
         """
-        wrap_ = lambda s: '\n'.join(wrap(s, width=72, subsequent_indent=5 * ' '))
+        if wrap_width > 0:
+            wrap_ = lambda s: '\n'.join(wrap(s, width=wrap_width, subsequent_indent=5 * ' '))
+        else:
+            wrap_ = lambda s: s
         if compact:
             sep = ' / '
             items = [(phrase, wrap_(sep.join(translations)))
@@ -381,7 +386,7 @@ def interactive_mode():
         print('Bye.')
 
 
-def format_query_result(result, compact=False):
+def format_query_result(result, compact, width):
     """
     Format the result of a query.
 
@@ -389,12 +394,15 @@ def format_query_result(result, compact=False):
     :type result: list
     :param compact: flag to format results compact
     :type compact: bool
+    :param wrap_width: width to wrap at
+    :type wrap_width: int
     """
     f = "=============== [ {0} ] ===============\n{1}"
     if not result:
         return 'No results.'
 
-    return '\n'.join(f.format(head, '\n'.join(e.format(compact) for e in entries))
+    return '\n'.join(f.format(head, '\n'.join(e.format(compact, width)
+                                              for e in entries))
                      for head, entries in result)
 
 
@@ -419,7 +427,7 @@ if __name__ == '__main__':
                   for opts in
                   ['[-i DICTCC_FILE]',
                    '[-v] [-S] [-h]',
-                   '[-c | -j] [-s | -r | -f] QUERY [QUERY ...]',
+                   '[-w WIDTH] [-c | -j] [-s | -r | -f] QUERY [QUERY ...]',
                    '(interactive mode)'])
 
     parser = argparse.ArgumentParser(add_help=False, usage=usage)
@@ -434,6 +442,9 @@ if __name__ == '__main__':
                               help='Use compact output format')
     format_mutex.add_argument('-j', '--json', action='store_true',
                               help='JSON output format')
+    formatting.add_argument('-w', '--width', default=72, type=int,
+                            help='Width to wrap output at'
+                            '(0 disables, defaults to %(default)s)')
 
     misc = parser.add_argument_group('Misc options')
     misc.add_argument('-v', '--version', action='version', help='Show version',
@@ -490,7 +501,8 @@ if __name__ == '__main__':
                         q = ':r:' + q
                     elif args.fulltext:
                         q = ':f:' + q
-                    print(format_query_result(execute_query(q), args.compact)
+                    print(format_query_result(execute_query(q), args.compact,
+                                              args.width)
                           .encode(sys.stdin.encoding or 'utf-8'))
 
         else:
