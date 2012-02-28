@@ -515,7 +515,7 @@ if __name__ == '__main__':
                           .encode(sys.stdin.encoding or 'utf-8'))
 
         else:
-            interactive_mode(args.HISTFILE)
+            interactive_mode(args.histfile)
 
     except Exception as e:
         if args.debug:
