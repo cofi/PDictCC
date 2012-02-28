@@ -35,7 +35,6 @@ from textwrap import dedent, wrap
 
 __version__ = ('0', '9')
 ENCODING = 'utf-8'
-HISTORYFILE = os.path.expanduser('~/.pdictcchistory')
 
 
 # Data representation
@@ -57,7 +56,6 @@ class DB(object):
     needs to be opened).
     """
     databases = [('a', 'A => B'), ('b', 'B => A')]
-    DICT_DIR = os.path.expanduser('~/.pdictcc')
     FILE_SCHEME = 'dict_{0}.dbm'
     LANG_DIR_KEY = '__dictcc_lang_dir'
 
@@ -351,19 +349,22 @@ def query_fulltext(query, db):
     return [Entry.from_serialized(v) for k, v in db if rx.search(v)]
 
 
-def interactive_mode():
+def interactive_mode(history):
     """
     Interactive mode for repeated queries against the database.
 
     See :func:`execute_query`.
+
+    :param history: path to read and write history
+    :type history: str
     """
     try:
         import readline
         readline.read_init_file()
         try:
-            readline.read_history_file(HISTORYFILE)
+            readline.read_history_file(history)
         except IOError:
-            print('No history available, tried "{0}"'.format(HISTORYFILE))
+            print('No history available, tried "{0}"'.format(history))
     except ImportError:
         pass
 
@@ -379,7 +380,7 @@ def interactive_mode():
 
     except EOFError:
         try:
-            readline.write_history_file(HISTORYFILE)
+            readline.write_history_file(history)
         except NameError:       # no readline imported
             pass
         print()
@@ -421,7 +422,6 @@ def dump_query_results(query_results):
 if __name__ == '__main__':
     import argparse
 
-    usage = '\n       '\
 
     class UserExpandAction(argparse.Action):
         """Action to expand the path passed to it."""
@@ -429,6 +429,7 @@ if __name__ == '__main__':
             setattr(namespace, self.dest, os.path.expanduser(values))
 
 
+    usage = '\n       '\
             .join('%(prog)s [-d PATH] {0}'
                   .format(opts)
                   for opts in
@@ -450,7 +451,7 @@ if __name__ == '__main__':
     format_mutex.add_argument('-j', '--json', action='store_true',
                               help='JSON output format')
     formatting.add_argument('-w', '--width', default=72, type=int,
-                            help='Width to wrap output at'
+                            help='Width to wrap output at '
                             '(0 disables, defaults to %(default)s)')
 
     misc = parser.add_argument_group('Misc options')
@@ -485,10 +486,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if args.directory:
-        DB.DICT_DIR = os.path.expanduser(args.directory)
-    if args.histfile:
-        HISTORYFILE = os.path.expanduser(args.histfile)
+    DB.DICT_DIR = args.directory
     try:
         if args.size:
             for lang, lang_desc in DB.databases:
@@ -517,7 +515,7 @@ if __name__ == '__main__':
                           .encode(sys.stdin.encoding or 'utf-8'))
 
         else:
-            interactive_mode()
+            interactive_mode(args.HISTFILE)
 
     except Exception as e:
         if args.debug:
