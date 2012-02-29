@@ -349,15 +349,23 @@ def query_fulltext(query, db):
     return [Entry.from_serialized(v) for k, v in db if rx.search(v)]
 
 
-def interactive_mode(history):
+def interactive_mode(history, compact, width):
     """
     Interactive mode for repeated queries against the database.
 
     See :func:`execute_query`.
 
-    :param history: path to read and write history
+    :param history: file path to read and write for history
     :type history: str
+    :param compact: flag to format results compact
+    :type compact: bool
+    :param wrap_width: width to wrap at
+    :type wrap_width: int
     """
+    settings = {
+        'compact': compact,
+        'width': width
+    }
     try:
         import readline
         readline.read_init_file()
@@ -375,8 +383,13 @@ def interactive_mode(history):
     try:
         while True:
             query = raw_input('=> ').strip().decode(sys.stdin.encoding)
-            print(format_query_result(execute_query(query))
-                  .encode(sys.stdout.encoding or 'utf-8'))
+            if query.startswith(':set'):
+                settings.update(parse_set(query))
+            else:
+                print(format_query_result(execute_query(query),
+                                          settings['compact'],
+                                          settings['width'])
+                      .encode(sys.stdout.encoding or 'utf-8'))
 
     except EOFError:
         try:
@@ -385,6 +398,44 @@ def interactive_mode(history):
             pass
         print()
         print('Bye.')
+
+
+def parse_set(command):
+    """
+    Parse a ``:set`` command and return the updated key and value as dict.
+    """
+    parsers = {
+        'compact': parse_boolean,
+        'width': int
+    }
+    d = {}
+
+    _, key, value = command.split(' ', 2)
+    value.strip()
+
+    try:
+        d[key] = parsers[key](value)
+    except KeyError:
+        print('Unknown Key "{0}"'.format(key))
+    except ValueError:
+        print('Could not parse value "{0}"'.format(value))
+
+    return d
+
+
+def parse_boolean(value):
+    """
+    Try to parse value generously as a boolean value.
+
+    :raises: :exc:`ValueError` if value is neither truthy nor falsy
+    """
+    value = value.lower()
+    if value in ('on', 'true', '1', 'yes'):
+        return True
+    elif value in ('off', 'false', '0', 'no'):
+        return False
+    else:
+        raise ValueError()
 
 
 def format_query_result(result, compact=False, width=72):
@@ -430,7 +481,7 @@ if __name__ == '__main__':
 
     parts = [('Import', '[-i DICTCC_FILE]'),
              ('Query', '[-w WIDTH] [-c | -j] [-s | -r | -f] QUERY [QUERY ...]'),
-             ('Interactive', '[-H HISTFILE]'),
+             ('Interactive', '[-H HISTFILE] [-w WIDTH] [-c]'),
              ('Information', '[-v] [-S] [-h]')]
 
     usage = '\n'.join('{{0:>{0}}}: %(prog)s [-d PATH] {{1}}'
@@ -515,7 +566,7 @@ if __name__ == '__main__':
                           .encode(sys.stdin.encoding or 'utf-8'))
 
         else:
-            interactive_mode(args.histfile)
+            interactive_mode(args.histfile, args.compact, args.width)
 
     except Exception as e:
         if args.debug:
