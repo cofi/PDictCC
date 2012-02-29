@@ -81,6 +81,15 @@
    If you prefix your query with =:r:= or =:f:= you will execute a regular
    expresion query respective a fulltext query.
 
+   You can change some settings within the interactive Mode by queries like =:set
+   key value=.
+
+   These settings are currently supported:
+
+   - =compact= for compact formatting ("boolish"[1], e.g. =:set compact on= or =:set
+     compact off=)
+   - =width= after how many characters output is wrapped (Integer, e.g. =:set width 42=)
+
    Here is an example Session (with an DE=>EN dictionary):
    #+BEGIN_EXAMPLE
    cofi@hitchhiker %> pdictcc
@@ -167,3 +176,8 @@
 
    PDictCC is fully compatible with RDictCc's commandline arguments and mostly
    with the output formatting.
+
+* Footnotes
+
+[1] A "boolish" value is true if it's one of /on/, /true/, /1/ or /yes/ or false if it's
+    one of /off/, /false/, /0/ or /no/ .
