@@ -104,11 +104,11 @@ class DB(object):
             raise StopIteration()
         key = self.db.firstkey()
         while key is not None:
-            yield key.decode(ENCODING), self.db[key].decode(ENCODING)
+            yield decode(key), decode(self.db[key])
             key = self.db.nextkey(key)
 
     def __setitem__(self, key, value):
-        self.db[key.encode(ENCODING)] = value.encode(ENCODING)
+        self.db[encode(key)] = encode(value)
 
     def __getitem__(self, key):
         return self.get(key)
@@ -125,7 +125,7 @@ class DB(object):
         :type default: unicode
         """
         try:
-            return self.db[key.encode(ENCODING)].decode(ENCODING)
+            return decode(self.db[encode(key)])
         except KeyError:
             if default is False:
                 raise
@@ -382,14 +382,14 @@ def interactive_mode(history, compact, width):
           'Enter C-d (Ctrl + d) to exit.')
     try:
         while True:
-            query = raw_input('=> ').strip().decode(sys.stdin.encoding)
+            query = decode(raw_input('=> '), sys.stdin.encoding)
             if query.startswith(':set'):
                 settings.update(parse_set(query))
             else:
-                print(format_query_result(execute_query(query),
-                                          settings['compact'],
-                                          settings['width'])
-                      .encode(sys.stdout.encoding or 'utf-8'))
+                print(encode(format_query_result(execute_query(query),
+                                                 settings['compact'],
+                                                 settings['width']),
+                             sys.stdout.encoding))
 
     except EOFError:
         try:
@@ -469,6 +469,18 @@ def dump_query_results(query_results):
                                    for head, entries in r]
                     } for query, r in query_results])
 
+
+def decode(s, preference=None):
+    """
+    Decode string with standard encoding or preference.
+    """
+    return s.decode(preference or ENCODING)
+
+def encode(s, preference=None):
+    """
+    Encode string with standard encoding or preference.
+    """
+    return s.encode(preference or ENCODING)
 
 if __name__ == '__main__':
     import argparse
@@ -551,19 +563,21 @@ if __name__ == '__main__':
             print('Imported {0} (A => B) and {1} (B => A) entries'.format(*counts))
 
         elif args.query:
-            queries = (q.decode(sys.stdin.encoding or 'utf-8') for q in args.query)
+            queries = (decode(q) for q in args.query)
             if args.json:
-                print(dump_query_results((q, execute_query(q)) for q in queries)
-                      .encode(sys.stdin.encoding or 'utf-8'))
+                print(encode(dump_query_results((q, execute_query(q))
+                                                for q in queries),
+                         sys.stdout.encoding))
             else:
                 for q in queries:
                     if args.regexp:
                         q = ':r:' + q
                     elif args.fulltext:
                         q = ':f:' + q
-                    print(format_query_result(execute_query(q), args.compact,
-                                              args.width)
-                          .encode(sys.stdin.encoding or 'utf-8'))
+                    print(encode(format_query_result(execute_query(q),
+                                                     args.compact,
+                                                     args.width),
+                         sys.stdout.encoding))
 
         else:
             interactive_mode(args.histfile, args.compact, args.width)
