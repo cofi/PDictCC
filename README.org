@@ -175,7 +175,8 @@
    But I don't see it as a priority.
 
    PDictCC is fully compatible with RDictCc's commandline arguments and mostly
-   with the output formatting.
+   with the output formatting but provides a strict superset of features (and
+   arguments).
 
 * Footnotes
 
