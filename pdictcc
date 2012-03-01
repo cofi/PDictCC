@@ -148,6 +148,14 @@ class DB(object):
         with self:
             return sum(1 for _ in self)
 
+    def info(self):
+        """
+        Return information about the database as dictionary.
+        """
+        return {'Direction:': self.header(),
+                'Transcriptions': ', '.join('{0} => {1}'.format(*e) for e
+                                            in self.transcriptions.iteritems())}
+
     def header(self):
         """
         Return the language header stored in the DB or ``None`` if there is none.
@@ -532,7 +540,7 @@ if __name__ == '__main__':
     parts = [('Import', '[-t TRANSCRIPTON [TRANSCRIPTON ...]] [-i DICTCC_FILE]'),
              ('Query', '[-w WIDTH] [-c | -j] [-s | -r | -f] QUERY [QUERY ...]'),
              ('Interactive', '[-H HISTFILE] [-w WIDTH] [-c]'),
-             ('Information', '[-v] [-S] [-h]')]
+             ('Information', '[--info] [-v] [-S] [-h]')]
 
     usage = '\n'.join('{{0:>{0}}}: %(prog)s [-d PATH] {{1}}'
                       .format(max(len(desc) for desc, _ in parts))
@@ -563,6 +571,8 @@ if __name__ == '__main__':
                       version='%(prog)s {0}'.format('.'.join(__version__)))
     misc.add_argument('-S', '--size', action='store_true',
                       help='Show the number of entries in the databases')
+    misc.add_argument('--info', action='store_true',
+                      help='Show information about databases')
     misc.add_argument('-d', '--directory', metavar='PATH',
                       default=os.path.expanduser('~/.pdictcc'),
                       action=UserExpandAction,
@@ -597,6 +607,13 @@ if __name__ == '__main__':
                 with DB(lang) as db:
                     print('{0}: {1} entries'.format(db.header() or lang_desc,
                                                     db.size()))
+        elif args.info:
+            for lang, lang_desc in DB.databases:
+                with DB(lang) as db:
+                    print(encode('Database: {0}'.format(db.path)))
+                    print(encode('\n'.join('{0}: {1}'.format(*e) for e
+                                           in db.info().iteritems())))
+
         elif args.imp:
             if len(args.transcription) % 2:
                 raise ValueError('Transcription list has to be even numbered')
