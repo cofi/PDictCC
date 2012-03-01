@@ -24,6 +24,37 @@
 
    At the moment only one dictionary is supported at a time.
 
+*** Transcriptions
+    If you deal with languages that contain "special" letters you may want to be
+    query for words that contain them via transcriptions (i.e. query "kaese" and
+    get the results you'd get for "käse").
+
+    Here is an import with transcriptions that's sensible for German dictionaries.
+    #+BEGIN_EXAMPLE
+    cofi@hitchhiker%> pdictcc --import dictionary.txt --transcription ä ae ö oe ß ss ü ue
+    #+END_EXAMPLE
+
+    Transcriptions are pairs of the string to replace and the string that will
+    replace it (e.g. a pair of the transcriptions above is =ä ae=).
+
+    And here is an example that utilizes transcriptions (note how we query for
+    'ä' with 'ae'):
+
+    #+BEGIN_EXAMPLE
+    cofi@hitchhiker %> pdictcc kaese
+    =============== [ DE => EN ] ===============
+    Käse {m}:
+        - cheese
+    Käse {m} [ugs.] [Unsinn]:
+        - codswallop [Br.] [coll.]
+        - garbage [esp. Am.]
+    Käse {m} [ugs.] [Blödsinn]:
+        - crap [coll.] [nonsense]
+        - rubbish [esp. Br.] [nonsense]
+    Käse {m} [ugs.] [dumme Angelegenheit]:
+        - stupid business
+    #+END_EXAMPLE
+
 ** Querying from the commandline
    You can query the database from the commandline as a simple lookup:
    #+BEGIN_EXAMPLE
