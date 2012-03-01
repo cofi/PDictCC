@@ -375,7 +375,7 @@ def query_regexp(query, db):
     :param db: the database object to query
     :type db: :class:`DB`
     """
-    rx = re.compile(query)
+    rx = re.compile(transform_key(query, db.transcriptions))
     return [Entry.from_serialized(v) for k, v in db if rx.match(k)]
 
 
