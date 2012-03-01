@@ -240,7 +240,8 @@ class Entry(object):
 
 def import_dictionary(path, transcriptions):
     """
-    Import dictionary from dict.cc TSV file and return the count of entries.
+    Import dictionary from dict.cc TSV file and return the count and directions
+    of entries.
 
     :param path: file name of TSV to import
     :type path: str
@@ -276,7 +277,7 @@ def import_dictionary(path, transcriptions):
                 db[DB.TRANSCRIPTONS_KEY] = '<;>'.join('{0}<=>{1}'.format(*t)
                                                       for t in transcriptions
                                                                .iteritems())
-        return len(a), len(b)
+        return len(a), a[DB.LANG_DIR_KEY], len(b), b[DB.LANG_DIR_KEY]
 
 
 def transform_key(key, transcriptions):
@@ -604,8 +605,8 @@ if __name__ == '__main__':
             transcriptions = dict([(x, next(ts)) for x in ts])
             path = args.imp
             print('Importing from "{0}"'.format(path))
-            counts = import_dictionary(path, transcriptions)
-            print('Imported {0} (A => B) and {1} (B => A) entries'.format(*counts))
+            info = import_dictionary(path, transcriptions)
+            print('Imported {0} ({1}) and {2} ({3}) entries'.format(*info))
 
         elif args.query:
             queries = (decode(q) for q in args.query)
