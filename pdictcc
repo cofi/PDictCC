@@ -432,10 +432,9 @@ def interactive_mode(history, compact, width):
             if query.startswith(':set'):
                 settings.update(parse_set(query))
             else:
-                print(encode(format_query_result(execute_query(query),
-                                                 settings['compact'],
-                                                 settings['width']),
-                             sys.stdout.encoding))
+                echo(format_query_result(execute_query(query),
+                                         settings['compact'],
+                                         settings['width']))
 
     except EOFError:
         try:
@@ -528,6 +527,12 @@ def encode(s, preference=None):
     """
     return s.encode(preference or ENCODING)
 
+def echo(s):
+    """
+    Print suitable encoded for stdout.
+    """
+    print(encode(s, sys.stdout.encoding))
+
 if __name__ == '__main__':
     import argparse
 
@@ -610,9 +615,9 @@ if __name__ == '__main__':
         elif args.info:
             for lang, lang_desc in DB.databases:
                 with DB(lang) as db:
-                    print(encode('Database: {0}'.format(db.path)))
-                    print(encode('\n'.join('{0}: {1}'.format(*e) for e
-                                           in db.info().iteritems())))
+                    echo('Database: {0}'.format(db.path))
+                    echo('\n'.join('{0}: {1}'.format(*e) for e
+                                   in db.info().iteritems()))
 
         elif args.imp:
             if len(args.transcription) % 2:
@@ -621,26 +626,23 @@ if __name__ == '__main__':
             ts = (decode(t) for t in args.transcription)
             transcriptions = dict([(x, next(ts)) for x in ts])
             path = args.imp
-            print('Importing from "{0}"'.format(path))
+            echo('Importing from "{0}"'.format(path))
             info = import_dictionary(path, transcriptions)
-            print('Imported {0} ({1}) and {2} ({3}) entries'.format(*info))
+            echo('Imported {0} ({1}) and {2} ({3}) entries'.format(*info))
 
         elif args.query:
             queries = (decode(q) for q in args.query)
             if args.json:
-                print(encode(dump_query_results((q, execute_query(q))
-                                                for q in queries),
-                         sys.stdout.encoding))
+                echo(dump_query_results((q, execute_query(q))
+                                        for q in queries))
             else:
                 for q in queries:
                     if args.regexp:
                         q = ':r:' + q
                     elif args.fulltext:
                         q = ':f:' + q
-                    print(encode(format_query_result(execute_query(q),
-                                                     args.compact,
-                                                     args.width),
-                         sys.stdout.encoding))
+                    echo(format_query_result(execute_query(q),
+                                             args.compact, args.width))
 
         else:
             interactive_mode(args.histfile, args.compact, args.width)
@@ -649,5 +651,5 @@ if __name__ == '__main__':
         if args.debug:
             raise
         else:
-            print('Error: {0}'.format(e))
+            echo('Error: {0}'.format(e))
         sys.exit(1)
