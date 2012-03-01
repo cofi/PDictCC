@@ -55,6 +55,10 @@
         - stupid business
     #+END_EXAMPLE
 
+    You can only specify transcriptions on import and they will affect both languages.
+    Furthermore transcriptions are only considered for simple and regexp lookup,
+    not for fulltext queries.
+
 ** Querying from the commandline
    You can query the database from the commandline as a simple lookup:
    #+BEGIN_EXAMPLE
