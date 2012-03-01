@@ -58,6 +58,7 @@ class DB(object):
     databases = [('a', 'A => B'), ('b', 'B => A')]
     FILE_SCHEME = 'dict_{0}.dbm'
     LANG_DIR_KEY = '__dictcc_lang_dir'
+    TRANSCRIPTONS_KEY = '__dictcc_transcriptions'
 
     def __init__(self, lang, importing=False):
         """
@@ -84,6 +85,7 @@ class DB(object):
 
         self.db = None
         self._accessors = 0
+        self.transcriptions = {}  # initialized on first opening
 
     def __enter__(self):
         if not os.path.exists(self.path):
@@ -91,6 +93,13 @@ class DB(object):
         if self._accessors == 0:
             self.db = gdbm.open(self.path, self._open_flags)
         self._accessors += 1
+        try:
+            transcriptions = decode(self.db[DB.TRANSCRIPTONS_KEY])
+            if transcriptions:
+                self.transcriptions = dict([t.split('<=>', 1)
+                                            for t in transcriptions.split('<;>')])
+        except KeyError:
+            pass
         return self
 
     def __exit__(self, type, value, traceback):
@@ -229,12 +238,14 @@ class Entry(object):
 
 # importing data
 
-def import_dictionary(path):
+def import_dictionary(path, transcriptions):
     """
     Import dictionary from dict.cc TSV file and return the count of entries.
 
     :param path: file name of TSV to import
     :type path: str
+    :param transcriptons: file name of TSV to import
+    :type transcriptons: list
     """
     a = defaultdict(Entry)
     b = defaultdict(Entry)
@@ -250,7 +261,7 @@ def import_dictionary(path):
                 continue
             phrase, translation, word_type = line.split('\t')
             for d in [a, b]:
-                key = extract_key(phrase)
+                key = transform_key(extract_key(phrase), transcriptions)
                 if key:
                     d[key].add(phrase, translation)
                 phrase, translation = translation, phrase
@@ -262,7 +273,25 @@ def import_dictionary(path):
                         db[key] = value
                     else:
                         db[key] = value.serialize()
+                db[DB.TRANSCRIPTONS_KEY] = '<;>'.join('{0}<=>{1}'.format(*t)
+                                                      for t in transcriptions
+                                                               .iteritems())
         return len(a), len(b)
+
+
+def transform_key(key, transcriptions):
+    """
+    Transform the key with the given transcriptions.
+
+    :param key: key to transform
+    :type key: unicode
+    :param transcriptions: maps the string to replace to the replacement
+    :type transcriptions: dict
+    """
+    # the replacements have to happen concurrently, to prevent retranslations
+    # so we build regexp to find all candidates and translate via dict lookup
+    rx = re.compile(u'{0}'.format('|'.join(re.escape(k) for k in transcriptions)))
+    return rx.sub(lambda m: transcriptions.get(m.group(0), ''), key)
 
 
 def extract_key(phrase):
@@ -322,7 +351,7 @@ def query_simple(query, db):
     :param db: the database object to query
     :type db: :class:`DB`
     """
-    result = db.get(query, '')
+    result = db.get(transform_key(query, db.transcriptions), '')
     return [Entry.from_serialized(result)] if result else []
 
 
@@ -499,7 +528,7 @@ if __name__ == '__main__':
         def __call__(self, parser, namespace, values, option_string=None):
             setattr(namespace, self.dest, os.path.expanduser(values))
 
-    parts = [('Import', '[-i DICTCC_FILE]'),
+    parts = [('Import', '[-t TRANSCRIPTON [TRANSCRIPTON ...]] [-i DICTCC_FILE]'),
              ('Query', '[-w WIDTH] [-c | -j] [-s | -r | -f] QUERY [QUERY ...]'),
              ('Interactive', '[-H HISTFILE] [-w WIDTH] [-c]'),
              ('Information', '[-v] [-S] [-h]')]
@@ -514,6 +543,9 @@ if __name__ == '__main__':
     imp = parser.add_argument_group('Database building options')
     imp.add_argument('-i', '--import', metavar='DICTCC_FILE', dest='imp',
                      help='Import dict files from dict.cc')
+    imp.add_argument('-t', '--transcription', nargs='+', default=[],
+                     help='Transcribe keys with arguments, '
+                     'pairs of pattern and replacement')
 
     formatting = parser.add_argument_group('Format options')
     format_mutex = formatting.add_mutually_exclusive_group()
@@ -565,9 +597,14 @@ if __name__ == '__main__':
                     print('{0}: {1} entries'.format(db.header() or lang_desc,
                                                     db.size()))
         elif args.imp:
+            if len(args.transcription) % 2:
+                raise ValueError('Transcription list has to be even numbered')
+
+            ts = (decode(t) for t in args.transcription)
+            transcriptions = dict([(x, next(ts)) for x in ts])
             path = args.imp
             print('Importing from "{0}"'.format(path))
-            counts = import_dictionary(path)
+            counts = import_dictionary(path, transcriptions)
             print('Imported {0} (A => B) and {1} (B => A) entries'.format(*counts))
 
         elif args.query:
