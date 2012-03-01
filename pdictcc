@@ -299,7 +299,7 @@ def transform_key(key, transcriptions):
     """
     # the replacements have to happen concurrently, to prevent retranslations
     # so we build regexp to find all candidates and translate via dict lookup
-    rx = re.compile(u'{0}'.format('|'.join(re.escape(k) for k in transcriptions)))
+    rx = re.compile('{0}'.format('|'.join(re.escape(k) for k in transcriptions)))
     return rx.sub(lambda m: transcriptions.get(m.group(0), ''), key)
 
 
