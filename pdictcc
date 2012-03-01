@@ -195,16 +195,24 @@ class Entry(object):
         if compact:
             sep = ' / '
             items = [(phrase, wrap_(sep.join(translations)))
-                     for phrase, translations in self.dictionary.iteritems()]
+                     for phrase, translations in self.items()]
         else:
             sep = '\n    - '
             items = [(phrase, sep + sep.join(wrap_(t) for t in translations))
-                     for phrase, translations in self.dictionary.iteritems()]
+                     for phrase, translations in self.items()]
 
         text = '\n'.join('{0}: {1}'.format(phrase, translations)
                          for phrase, translations in items)
 
         return text
+
+    def items(self):
+        """
+        Return the items of this entry.
+
+        Items are sorted ascending regarding the length of the phrase.
+        """
+        return sorted(self.dictionary.iteritems(), key=lambda p: len(p[0]))
 
     def serialize(self):
         """
