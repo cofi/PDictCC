@@ -483,7 +483,7 @@ def parse_boolean(value):
         raise ValueError()
 
 
-def format_query_result(result, compact=False, width=72):
+def format_query_result(result, compact, width):
     """
     Format the result of a query.
 
