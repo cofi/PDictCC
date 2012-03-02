@@ -196,7 +196,7 @@ class Entry(object):
         """
         self.dictionary[phrase.strip()].append(translation.strip())
 
-    def format(self, compact, wrap_width):
+    def format(self, compact, wrap_width, limit):
         """
         Return the entry formatted for output.
 
@@ -204,19 +204,22 @@ class Entry(object):
         :type compact: bool
         :param wrap_width: width to wrap at
         :type wrap_width: int
+        :param limit: limit to so many result phrases
+        :type limit: int
         """
         if wrap_width > 0:
             wrap_ = lambda s: '\n'.join(wrap(s, width=wrap_width, subsequent_indent=5 * ' '))
         else:
             wrap_ = lambda s: s
+        capped = self.items()[:limit] if limit != 0 else self.items()
         if compact:
             sep = ' / '
             items = [(phrase, wrap_(sep.join(translations)))
-                     for phrase, translations in self.items()]
+                     for phrase, translations in capped]
         else:
             sep = '\n    - '
             items = [(phrase, sep + sep.join(wrap_(t) for t in translations))
-                     for phrase, translations in self.items()]
+                     for phrase, translations in capped]
 
         text = '\n'.join('{0}: {1}'.format(phrase, translations)
                          for phrase, translations in items)
@@ -395,7 +398,7 @@ def query_fulltext(query, db):
     return [Entry.from_serialized(v) for k, v in db if rx.search(v)]
 
 
-def interactive_mode(history, compact, width):
+def interactive_mode(history, compact, width, limit):
     """
     Interactive mode for repeated queries against the database.
 
@@ -407,10 +410,13 @@ def interactive_mode(history, compact, width):
     :type compact: bool
     :param wrap_width: width to wrap at
     :type wrap_width: int
+    :param limit: limit to so many result phrases
+    :type limit: int
     """
     settings = {
         'compact': compact,
-        'width': width
+        'width': width,
+        'limit': limit
     }
     try:
         import readline
@@ -434,7 +440,8 @@ def interactive_mode(history, compact, width):
             else:
                 echo(format_query_result(execute_query(query),
                                          settings['compact'],
-                                         settings['width']))
+                                         settings['width'],
+                                         settings['limit']))
 
     except EOFError:
         try:
@@ -451,7 +458,8 @@ def parse_set(command):
     """
     parsers = {
         'compact': parse_boolean,
-        'width': int
+        'width': int,
+        'limit': int
     }
     d = {}
 
@@ -483,7 +491,7 @@ def parse_boolean(value):
         raise ValueError()
 
 
-def format_query_result(result, compact, width):
+def format_query_result(result, compact, width, limit):
     """
     Format the result of a query.
 
@@ -493,12 +501,14 @@ def format_query_result(result, compact, width):
     :type compact: bool
     :param wrap_width: width to wrap at
     :type wrap_width: int
+    :param limit: limit to so many result phrases
+    :type limit: int
     """
     f = "=============== [ {0} ] ===============\n{1}"
     if not result:
         return 'No results.'
 
-    return '\n'.join(f.format(head, '\n'.join(e.format(compact, width)
+    return '\n'.join(f.format(head, '\n'.join(e.format(compact, width, limit)
                                               for e in entries))
                      for head, entries in result)
 
@@ -569,6 +579,9 @@ if __name__ == '__main__':
                               help='JSON output format')
     formatting.add_argument('-w', '--width', default=72, type=int,
                             help='Width to wrap output at '
+                            '(0 disables, defaults to %(default)s)')
+    formatting.add_argument('-l', '--limit', default=0, type=int,
+                            help='Limits to LIMIT result phrases'
                             '(0 disables, defaults to %(default)s)')
 
     misc = parser.add_argument_group('Misc options')
@@ -642,10 +655,12 @@ if __name__ == '__main__':
                     elif args.fulltext:
                         q = ':f:' + q
                     echo(format_query_result(execute_query(q),
-                                             args.compact, args.width))
+                                             args.compact, args.width,
+                                             args.limit))
 
         else:
-            interactive_mode(args.histfile, args.compact, args.width)
+            interactive_mode(args.histfile, args.compact,
+                             args.width, args.limit)
 
     except Exception as e:
         if args.debug:

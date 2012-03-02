@@ -124,6 +124,7 @@
    - =compact= for compact formatting ("boolish"[1], e.g. =:set compact on= or =:set
      compact off=)
    - =width= after how many characters output is wrapped (Integer, e.g. =:set width 42=)
+   - =limit= how many phrases per entry are displayed (Integer, e.g. =:set limit 23=)
 
    Here is an example Session (with an DE=>EN dictionary):
    #+BEGIN_EXAMPLE
