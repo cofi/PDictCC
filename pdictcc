@@ -146,7 +146,7 @@ class DB(object):
         Return the number of entries in the db.
         """
         with self:
-            return sum(1 for _ in self)
+            return len(self.db)
 
     def info(self):
         """
