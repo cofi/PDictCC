@@ -247,6 +247,42 @@ class Entry(object):
         return "#<>#".join(parts)
 
 
+class CachingDB(DB):
+    def __init__(self, lang, treshold=1000):
+        """
+        :param lang: language identifier, db file path is constructed with it
+        :type lang: unicode
+        :param treshold: count of max entries, will commit to db after reaching it
+        :type treshold: int
+        """
+        super(CachingDB, self).__init__(lang, True)
+        self.cache = {}
+        self.treshold = treshold
+
+    def __exit__(self, type, value, traceback):
+        self._commit()
+        super(CachingDB, self).__exit__(type, value, traceback)
+
+    def __setitem__(self, key, value):
+        if len(self.cache) > self.treshold:
+            self._commit()
+        self.cache[key] = value
+
+    def __getitem__(self, key):
+        try:
+            return self.cache[key]
+        except KeyError:
+            entry = self.get(key, '') if key.startswith('__dictcc_') \
+                    else Entry.from_serialized(self.get(key, ''))
+            self[key] = entry
+            return entry
+
+    def _commit(self):
+        for key, entry in self.cache.iteritems():
+            value = entry if key.startswith('__dictcc_') else entry.serialize()
+            super(CachingDB, self).__setitem__(key, value)
+        self.cache.clear()
+
 # importing data
 
 def import_dictionary(path, transcriptions):
