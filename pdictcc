@@ -32,6 +32,15 @@ import sys
 from collections import defaultdict
 from textwrap import dedent, wrap
 
+try:
+    from progressbar import ProgressBar
+except ImportError:
+    class ProgressBar(object):
+        def __init__(self, *args, **kwargs):
+            pass
+        def update(self, *args, **kwargs):
+            pass
+
 
 __version__ = ('0', '9')
 ENCODING = 'utf-8'
@@ -302,6 +311,7 @@ def import_dictionary(path, transcriptions):
     with CachingDB('a', 100) as a:
         with CachingDB('b', 1000) as b:
             with codecs.open(path, encoding=ENCODING) as f:
+                pbar = ProgressBar(maxval=os.path.getsize(path))
                 head = re.match('# ([A-Z]{2})-([A-Z]{2}) vocabulary database', next(f))
                 if not head:
                     raise ValueError('"{0}" is not a dict.cc database'.format(path))
@@ -313,6 +323,7 @@ def import_dictionary(path, transcriptions):
                 b[DB.TRANSCRIPTONS_KEY] = serialized_transcriptions
 
                 for line in f:
+                    pbar.update(f.tell())
                     if line.startswith('#') or not line.strip():
                         continue
                     phrase, translation, word_type = line.split('\t')

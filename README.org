@@ -9,6 +9,8 @@
    - GDBM bindings for Python (should come with Python, if you see an
      =ImportError= it does not; on Debian GNU/Linux you should install the
      =python-gdbm= package)
+   - optional: [[http://pypi.python.org/pypi/progressbar/][progressbar]] module for a progressbar on import (on Debian
+     GNU/Linux =python-progressbar=)
 
 ** Importing a dict.cc dictionary
    You can get a dict.cc dictionary by filing a request [[http://www1.dict.cc/translation_file_request.php][here]].
