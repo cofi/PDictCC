@@ -295,36 +295,35 @@ def import_dictionary(path, transcriptions):
     :param transcriptons: file name of TSV to import
     :type transcriptons: list
     """
-    a = defaultdict(Entry)
-    b = defaultdict(Entry)
-    with codecs.open(path, encoding=ENCODING) as f:
-        head = re.match('# ([A-Z]{2})-([A-Z]{2}) vocabulary database', next(f))
-        if not head:
-            raise ValueError('"{0}" is not a dict.cc database'.format(path))
-        a[DB.LANG_DIR_KEY] = ' => '.join(head.groups())
-        b[DB.LANG_DIR_KEY] = ' => '.join(reversed(head.groups()))
+    serialized_transcriptions = '<;>'.join('{0}<=>{1}'.format(*t)
+                                           for t in transcriptions.iteritems())
 
-        for line in f:
-            if line.startswith('#') or not line.strip():
-                continue
-            phrase, translation, word_type = line.split('\t')
-            for d in [a, b]:
-                key = transform_key(extract_key(phrase), transcriptions)
-                if key:
-                    d[key].add(phrase, translation)
-                phrase, translation = translation, phrase
+    with CachingDB('a', 100) as a, CachingDB('b', 1000) as b:
+        with codecs.open(path, encoding=ENCODING) as f:
+            head = re.match('# ([A-Z]{2})-([A-Z]{2}) vocabulary database', next(f))
+            if not head:
+                raise ValueError('"{0}" is not a dict.cc database'.format(path))
 
-        for d, db_name in [(a, 'a'), (b, 'b')]:
-            with DB(db_name, True) as db:
-                for key, value in d.iteritems():
-                    if key == DB.LANG_DIR_KEY:
-                        db[key] = value
-                    else:
-                        db[key] = value.serialize()
-                db[DB.TRANSCRIPTONS_KEY] = '<;>'.join('{0}<=>{1}'.format(*t)
-                                                      for t in transcriptions
-                                                               .iteritems())
-        return len(a), a[DB.LANG_DIR_KEY], len(b), b[DB.LANG_DIR_KEY]
+            # set db headers
+            a[DB.LANG_DIR_KEY] = ' => '.join(head.groups())
+            a[DB.TRANSCRIPTONS_KEY] = serialized_transcriptions
+            b[DB.LANG_DIR_KEY] = ' => '.join(reversed(head.groups()))
+            b[DB.TRANSCRIPTONS_KEY] = serialized_transcriptions
+
+            for line in f:
+                if line.startswith('#') or not line.strip():
+                    continue
+                phrase, translation, word_type = line.split('\t')
+                for d in [a, b]:
+                    key = transform_key(extract_key(phrase), transcriptions)
+                    if key:
+                        d[key].add(phrase, translation)
+                    phrase, translation = translation, phrase
+
+        a.db.reorganize()
+        b.db.reorganize()
+
+        return a.size(), a[DB.LANG_DIR_KEY], b.size(), b[DB.LANG_DIR_KEY]
 
 
 def transform_key(key, transcriptions):
