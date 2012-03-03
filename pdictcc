@@ -152,9 +152,10 @@ class DB(object):
         """
         Return information about the database as dictionary.
         """
-        return {'Direction:': self.header(),
-                'Transcriptions': ', '.join('{0} => {1}'.format(*e) for e
-                                            in self.transcriptions.iteritems())}
+        return [('Database', self.path),
+                ('Direction', self.header()),
+                ('Transcriptions', ', '.join('{0} => {1}'.format(*e) for e
+                                             in self.transcriptions.iteritems()))]
 
     def header(self):
         """
@@ -629,9 +630,7 @@ if __name__ == '__main__':
         elif args.info:
             for lang, lang_desc in DB.databases:
                 with DB(lang) as db:
-                    echo('Database: {0}'.format(db.path))
-                    echo('\n'.join('{0}: {1}'.format(*e) for e
-                                   in db.info().iteritems()))
+                    echo('\n'.join('{0}: {1}'.format(*e) for e in db.info()))
 
         elif args.imp:
             if len(args.transcription) % 2:
