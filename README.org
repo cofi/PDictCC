@@ -1,7 +1,5 @@
 * PDictCC
-  PDictCC is a Python port of Tassilo Horn's great [[http://www.tsdh.de/cgi-bin/wiki.pl/RDictCc][RDictCc]] that sprang into
-  existance because RDictCc takes its time to import a dictionary (> 5 minutes
-  here) whereas PDictCC is at ~ 30 seconds.
+  PDictCC is a Python port of Tassilo Horn's great [[http://www.tsdh.de/cgi-bin/wiki.pl/RDictCc][RDictCc]].
   It tries to be compatible with it where it is sensible and possible.
 
   See [[Compatibility with RDictCc]] for more information.
@@ -20,7 +18,6 @@
    one dictionary.
 
    To import that dictionary into PDictCC's format invoke =pdictcc -i dictionary.txt=.
-   (This currently takes a lot of memory, ~500 MB for DE=>EN, you have been warned!)
 
    At the moment only one dictionary is supported at a time.
 
