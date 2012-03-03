@@ -553,7 +553,8 @@ if __name__ == '__main__':
             setattr(namespace, self.dest, os.path.expanduser(values))
 
     parts = [('Import', '[-t TRANSCRIPTON [TRANSCRIPTON ...]] [-i DICTCC_FILE]'),
-             ('Query', '[-w WIDTH] [-c | -j] [-s | -r | -f] QUERY [QUERY ...]'),
+             ('Query', '[-w WIDTH] [-l LIMIT] [-c | -j] '
+                       '[-s | -r | -f] QUERY [QUERY ...]'),
              ('Interactive', '[-H HISTFILE] [-w WIDTH] [-c]'),
              ('Information', '[--info] [-v] [-S] [-h]')]
 
@@ -581,7 +582,7 @@ if __name__ == '__main__':
                             help='Width to wrap output at '
                             '(0 disables, defaults to %(default)s)')
     formatting.add_argument('-l', '--limit', default=0, type=int,
-                            help='Limits to LIMIT result phrases'
+                            help='Limits to LIMIT result phrases '
                             '(0 disables, defaults to %(default)s)')
 
     misc = parser.add_argument_group('Misc options')
